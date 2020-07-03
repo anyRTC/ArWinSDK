@@ -422,6 +422,13 @@ struct ExternalVideoFrame
         /** 1: The video buffer in the format of raw data.
          */
         VIDEO_BUFFER_RAW_DATA = 1,
+		/** 10: The video buffer in the format of h264 extra data.
+		*/
+		VIDEO_BUFFER_H264_EXTRA_DATA = 10,
+		/** 11: The video buffer in the format of h264 data.
+		*/
+		VIDEO_BUFFER_H264_DATA = 11,
+		
     };
 
     /** The video pixel format.
@@ -443,6 +450,12 @@ struct ExternalVideoFrame
         /** 16: The video pixel format is I422.
          */
         VIDEO_PIXEL_I422 = 16,
+		/** 32: The video is key frame.
+		*/
+		VIDEO_KEY_FRAME = 32,
+		/** 64: The video is normal frame.
+		*/
+		VIDEO_NOR_FRAME = 64,
     };
 
     /** The buffer type. See #VIDEO_BUFFER_TYPE
@@ -454,9 +467,15 @@ struct ExternalVideoFrame
     /** The video buffer.
      */
     void* buffer;
+	/** The length of video buffer.
+	 */
+	int length;
     /** Line spacing of the incoming video frame, which must be in pixels instead of bytes. For textures, it is the width of the texture.
      */
     int stride;
+	/** Width of the incoming video frame.
+	 */
+	int width;
     /** Height of the incoming video frame.
      */
     int height;

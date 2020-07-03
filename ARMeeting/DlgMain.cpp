@@ -93,6 +93,7 @@ void DlgMain::OnBnClickedBtnjoinChannel()
 	CHAR szChannelName[128];
 	::WideCharToMultiByte(CP_ACP, 0, strChannelName, -1, szChannelName, 128, NULL, NULL);
 	//pEngine->setParameters("{\"Cmd\":\"ConfPriCloudAddr\", \"ServerAdd\": \"192.168.199.245\", \"Port\": 6080}");
+	//pEngine->setParameters("{\"Cmd\":\"SetQosParameter\", \"Ms\": 150}");
 	pEngine->joinChannel(NULL, szChannelName, NULL, "");
 }
 
