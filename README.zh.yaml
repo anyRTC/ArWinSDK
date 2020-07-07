@@ -5,7 +5,7 @@ Meta:
   project: OpenVideoCall
   # | 代表这里是字符串
   description: |
-    这个开源示例项目演示了如何快速集成 Agora 视频 SDK，实现多人视频通话。
+    这个开源示例项目演示了如何快速集成 AR4.0 视频 SDK，实现多人视频通话。
     
     在这个示例项目中包含了以下功能：
 
@@ -20,9 +20,9 @@ Meta:
 
     本开源项目使用 **C++** 语言
 
-    你也可以在这里查看入门版的示例项目：[Agora-Windows-Tutorial-1to1](https://github.com/AgoraIO/Agora-Windows-Tutorial-1to1)
+    你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Agora-Windows-Tutorial-1to1)
 
-    Agora 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
+    AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
 
     - [OpenVideoCall-Android](https://github.com/AgoraIO/OpenVideoCall-Android)
     - [OpenVideoCall-iOS](https://github.com/AgoraIO/OpenVideoCall-iOS)
@@ -36,7 +36,7 @@ QuickStart:
   description:
     这个段落主要讲解了如何编译和运行实例程序。
   sections:
-    - title: 创建Agora账号并获取AppId
+    - title: 创建账号并获取AppId
       content: |
         在编译和启动实例程序前，您需要首先获取一个可用的App ID:
         1. 在[agora.io](https://dashboard.agora.io/signin/)创建一个开发者账号
@@ -48,7 +48,7 @@ QuickStart:
             #define APP_ID _T("Your App ID")
             ```
 
-    - title: 集成 Agora 视频 SDK
+    - title: 集成 AR4.0 视频 SDK
       content: |
         $_{WIN_INTEGRATE}
     
@@ -58,7 +58,7 @@ QuickStart:
 
         2. sdk/dll 文件下的 dll 库也需要放在相应的执行路径下。
 
-        温馨提示：此案例教程中已经为您配置好相关的 dll 库，若用户想自己使用 agora 提供的接口进行相关开发，则需按上述提示将 dll 库放入相应的执行路径下。
+        温馨提示：此案例教程中已经为您配置好相关的 dll 库，若用户想自己使用 AR4.0 提供的接口进行相关开发，则需按上述提示将 dll 库放入相应的执行路径下。
 
 Resources:
   document: https://docs.agora.io/cn/

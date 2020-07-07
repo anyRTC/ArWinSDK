@@ -17,9 +17,9 @@ With this sample app, you can:
 
 This demo is written in **C++**
 
-A tutorial demo can be found here: [Agora-Windows-Tutorial-1to1](https://github.com/AgoraIO/Basic-Video-Call/tree/master/One-to-One-Video/Agora-Windows-Tutorial-1to1)
+A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Basic-Video-Call/tree/master/One-to-One-Video/Agora-Windows-Tutorial-1to1)
 
-Agora Video SDK supports iOS / Android / Windows / macOS etc. You can find demos of these platform here:
+AR4.0 Video SDK supports iOS / Android / Windows / macOS etc. You can find demos of these platform here:
 
 - [OpenVideoCall-Android](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-Android)
 - [OpenVideoCall-iOS](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-iOS)
@@ -48,9 +48,9 @@ To build and run the sample application, get an App ID:
     #define APP_ID _T("Your App ID")
     ```
 
-### Integrate the Agora Video SDK
+### Integrate the AR4.0 Video SDK
 
-1. Download the **Agora Video SDK** from [Agora.io SDK](https://www.agora.io/en/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
+1. Download the **AR4.0 Video SDK** from [Agora.io SDK](https://www.agora.io/en/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
 2. Open OpenVideoCall.sln, build the solution and run.
 
 

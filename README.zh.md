@@ -2,7 +2,7 @@
 
 *[English](README.md) | 中文*
 
-这个开源示例项目演示了如何快速集成 Agora 视频 SDK，实现多人视频通话。
+这个开源示例项目演示了如何快速集成 AR4.0 视频 SDK，实现多人视频通话。
 
 在这个示例项目中包含了以下功能：
 
@@ -17,9 +17,9 @@
 
 本开源项目使用 **C++** 语言
 
-你也可以在这里查看入门版的示例项目：[Agora-Windows-Tutorial-1to1](https://github.com/AgoraIO/Agora-Windows-Tutorial-1to1)
+你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Agora-Windows-Tutorial-1to1)
 
-Agora 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
+AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
 
 - [OpenVideoCall-Android](https://github.com/AgoraIO/OpenVideoCall-Android)
 - [OpenVideoCall-iOS](https://github.com/AgoraIO/OpenVideoCall-iOS)
@@ -37,7 +37,7 @@ Agora 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 ### 创建Agora账号并获取AppId
 
 在编译和启动实例程序前，您需要首先获取一个可用的App ID:
-1. 在[agora.io](https://dashboard.agora.io/signin/)创建一个开发者账号
+1. 在[AR4.0](https://dashboard.agora.io/signin/)创建一个开发者账号
 2. 前往后台页面，点击左部导航栏的 **项目 > 项目列表** 菜单
 3. 复制后台的 **App ID** 并备注，稍后启动应用时会用到它
 4. 将 AppID 内容替换至 APP_ID 宏定义中
@@ -46,9 +46,9 @@ Agora 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
     #define APP_ID _T("Your App ID")
     ```
 
-### 集成 Agora 视频 SDK
+### 集成 AR4.0 视频 SDK
 
-1. 在 [Agora.io SDK](https://www.agora.io/cn/blog/download/) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
+1. 在 [AR4.0 SDK](https://www.agora.io/cn/blog/download/) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
 
 2. 使用 VC++2013 打开 OpenVideoCall.sln，编译整个解决方案
 
@@ -59,7 +59,7 @@ Agora 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 
 2. sdk/dll 文件下的 dll 库也需要放在相应的执行路径下。
 
-温馨提示：此案例教程中已经为您配置好相关的 dll 库，若用户想自己使用 agora 提供的接口进行相关开发，则需按上述提示将 dll 库放入相应的执行路径下。
+温馨提示：此案例教程中已经为您配置好相关的 dll 库，若用户想自己使用 AR4.0 提供的接口进行相关开发，则需按上述提示将 dll 库放入相应的执行路径下。
 
 ## 联系我们
 
