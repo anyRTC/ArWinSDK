@@ -37,7 +37,7 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 ### 创建Agora账号并获取AppId
 
 在编译和启动实例程序前，您需要首先获取一个可用的App ID:
-1. 在[AR4.0](https://dashboard.agora.io/signin/)创建一个开发者账号
+1. 在[云平台](https://dashboard.agora.io/signin/)创建一个开发者账号
 2. 前往后台页面，点击左部导航栏的 **项目 > 项目列表** 菜单
 3. 复制后台的 **App ID** 并备注，稍后启动应用时会用到它
 4. 将 AppID 内容替换至 APP_ID 宏定义中
