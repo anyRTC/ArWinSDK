@@ -33,7 +33,7 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 
 这个段落主要讲解了如何编译和运行实例程序。
 
-### 创建Agora账号并获取AppId
+### 创建anyRTC账号并获取AppId
 
 在编译和启动实例程序前，您需要首先获取一个可用的App ID:
 1. 在[云平台](https://console.anyrtc.io/signin/)创建一个开发者账号

@@ -49,7 +49,7 @@ To build and run the sample application, get an App ID:
 
 ### Integrate the AR4.0 Video SDK
 
-1. Download the **AR4.0 Video SDK** from [Agora.io SDK](https://www.anyrtc.io/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
+1. Download the **AR4.0 Video SDK** from [anyRTC.io SDK](https://www.anyrtc.io/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
 2. Open OpenVideoCall.sln, build the solution and run.
 
 
@@ -61,7 +61,7 @@ please select the OpenVideoCall project in the Solution Explorer and right click
 
 2. The dll library under the sdk/dll file needs to be placed in the corresponding execution path.
 
-Tips: The relevant dll library has been configured for you in this case tutorial. If you want to use the interface provided by agora for related development, you need to put the dll library into the corresponding execution path as prompted above.
+Tips: The relevant dll library has been configured for you in this case tutorial. If you want to use the interface provided by anyrtc for related development, you need to put the dll library into the corresponding execution path as prompted above.
 
 ## Resources
 
