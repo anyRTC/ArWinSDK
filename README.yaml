@@ -20,13 +20,12 @@ Meta:
 
     This demo is written in **C++**
 
-    A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Basic-Video-Call/tree/master/One-to-One-Video/Agora-Windows-Tutorial-1to1)
+    A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1]()
 
     AR4.0 Video SDK supports iOS / Android / Windows / macOS etc. You can find demos of these platform here:
 
-    - [OpenVideoCall-Android](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-Android)
-    - [OpenVideoCall-iOS](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-iOS)
-    - [OpenVideoCall-macOS](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-macOS)
+    - [OpenVideoCall-Android](https://github.com/anyRTC/ArAndroidSDK)
+    - [OpenVideoCall-iOS](https://github.com/anyRTC/AriOSSDK)
 
 Prerequisites:
   - Visual Studio 2013 or higher
@@ -58,8 +57,8 @@ QuickStart:
             Tips: The relevant dll library has been configured for you in this case tutorial. If you want to use the interface provided by AR4.0 for related development, you need to put the dll library into the corresponding execution path as prompted above.
 
 Resources:
-  document: https://docs.agora.io/en/
-  issue: https://github.com/AgoraIO/Basic-Video-Call/issues
+  document: https://docs.anyrtc.io
+  issue: https://github.com/anyRTC/ArWinSDK/issues
 
 License:
   type: MIT

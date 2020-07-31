@@ -2,7 +2,7 @@
 
 *English | [中文](README.zh.md)*
 
-The Open Video Call Windows Sample App is an open-source demo that will help you get video chat integrated directly into your Windows applications using the Agora Video SDK.
+The Open Video Call Windows Sample App is an open-source demo that will help you get video chat integrated directly into your Windows applications using the AR4.0 Video SDK.
 
 With this sample app, you can:
 
@@ -17,13 +17,12 @@ With this sample app, you can:
 
 This demo is written in **C++**
 
-A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Basic-Video-Call/tree/master/One-to-One-Video/Agora-Windows-Tutorial-1to1)
+A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1]()
 
 AR4.0 Video SDK supports iOS / Android / Windows / macOS etc. You can find demos of these platform here:
 
-- [OpenVideoCall-Android](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-Android)
-- [OpenVideoCall-iOS](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-iOS)
-- [OpenVideoCall-macOS](https://github.com/AgoraIO/Basic-Video-Call/tree/master/Group-Video/OpenVideoCall-macOS)
+- [OpenVideoCall-Android](https://github.com/anyRTC/ArAndroidSDK)
+- [OpenVideoCall-iOS](https://github.com/anyRTC/AriOSSDK)
 
 ## Prerequisites
 
@@ -37,7 +36,7 @@ This section shows you how to prepare, build, and run the sample application.
 ### Obtain an App ID
 
 To build and run the sample application, get an App ID:
-1. Create a developer account at [anyrtc.io](https://dashboard.agora.io/signin/). Once you finish the signup process, you will be redirected to the Dashboard.
+1. Create a developer account at [anyrtc.io](https://console.anyrtc.io/signin/). Once you finish the signup process, you will be redirected to the Dashboard.
 2. Navigate in the Dashboard tree on the left to **Projects** > **Project List**.
 3. Save the **App ID** from the Dashboard for later use.
 4. Generate a temp **Access Token** (valid for 24 hours) from dashboard page with given channel name, save for later use.
@@ -50,7 +49,7 @@ To build and run the sample application, get an App ID:
 
 ### Integrate the AR4.0 Video SDK
 
-1. Download the **AR4.0 Video SDK** from [Agora.io SDK](https://www.agora.io/en/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
+1. Download the **AR4.0 Video SDK** from [Agora.io SDK](https://www.anyrtc.io/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
 2. Open OpenVideoCall.sln, build the solution and run.
 
 
@@ -66,8 +65,8 @@ Tips: The relevant dll library has been configured for you in this case tutorial
 
 ## Resources
 
-- You can find full API document at [Document Center](https://docs.agora.io/en/)
-- You can file bugs about this demo at [issue](https://github.com/AgoraIO/Basic-Video-Call/issues)
+- You can find full API document at [Document Center](https://docs.anyrtc.io)
+- You can file bugs about this demo at [issue](https://github.com/anyRTC/ArWinSDK/issues)
 
 ## License
 

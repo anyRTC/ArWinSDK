@@ -17,13 +17,12 @@
 
 本开源项目使用 **C++** 语言
 
-你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1](https://github.com/AgoraIO/Agora-Windows-Tutorial-1to1)
+你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1]()
 
 AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
 
-- [OpenVideoCall-Android](https://github.com/AgoraIO/OpenVideoCall-Android)
-- [OpenVideoCall-iOS](https://github.com/AgoraIO/OpenVideoCall-iOS)
-- [OpenVideoCall-macOS](https://github.com/AgoraIO/OpenVideoCall-macOS)
+- [OpenVideoCall-Android](https://github.com/anyRTC/ArAndroidSDK)
+- [OpenVideoCall-iOS](https://github.com/anyRTC/AriOSSDK)
 
 ## 环境准备
 
@@ -37,7 +36,7 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 ### 创建Agora账号并获取AppId
 
 在编译和启动实例程序前，您需要首先获取一个可用的App ID:
-1. 在[云平台](https://dashboard.agora.io/signin/)创建一个开发者账号
+1. 在[云平台](https://console.anyrtc.io/signin/)创建一个开发者账号
 2. 前往后台页面，点击左部导航栏的 **项目 > 项目列表** 菜单
 3. 复制后台的 **App ID** 并备注，稍后启动应用时会用到它
 4. 将 AppID 内容替换至 APP_ID 宏定义中
@@ -48,7 +47,7 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 
 ### 集成 AR4.0 视频 SDK
 
-1. 在 [AR4.0 SDK](https://www.agora.io/cn/blog/download/) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
+1. 在 [AR4.0 SDK](https://www.anyrtc.io/blog/download/) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
 
 2. 使用 VC++2013 打开 OpenVideoCall.sln，编译整个解决方案
 
@@ -63,11 +62,11 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 
 ## 联系我们
 
-- 完整的 API 文档见 [文档中心](https://docs.agora.io/cn/)
-- 如果在集成中遇到问题, 你可以到 [开发者社区](https://dev.agora.io/cn/) 提问
-- 如果有售前咨询问题, 可以拨打 400 632 6626，或加入官方Q群 12742516 提问
-- 如果需要售后技术支持, 你可以在 [Agora Dashboard](https://dashboard.agora.io) 提交工单
-- 如果发现了示例代码的 bug, 欢迎提交 [issue](https://github.com/AgoraIO/Basic-Video-Call/issues)
+- 完整的 API 文档见 [文档中心](https://docs.anyrtc.io/)
+- 如果在集成中遇到问题, 你可以到 [开发者社区](https://bbs.anyrtc.io/) 提问
+- 如果有售前咨询问题, 可以拨打 021-65650071，或加入官方Q群 580477436 提问
+- 如果需要售后技术支持, 你可以在 [anyRTC Dashboard](https://console.anyrtc.io) 提交工单
+- 如果发现了示例代码的 bug, 欢迎提交 [issue](https://github.com/anyRTC/ArWinSDK/issues)
 
 ## 代码许可
 
