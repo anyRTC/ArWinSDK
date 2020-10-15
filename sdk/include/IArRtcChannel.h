@@ -6,7 +6,7 @@
 
 #ifndef __I_AR_RTC_CHANNEL_H__
 #define __I_AR_RTC_CHANNEL_H__
-#include "IARRtcEngine.h"
+#include "IArRtcEngine.h"
 
 namespace ar {
 namespace rtc {
@@ -269,21 +269,119 @@ public:
         (void)reason;
         (void)elapsed;
     }
-    /** Reports which user is the loudest speaker.
 
-    If the user enables the audio volume indication by calling the \ref IChannel::enableAudioVolumeIndication(int, int, bool) "enableAudioVolumeIndication" method, this callback returns the @p uid of the active speaker detected by the audio volume detection module of the SDK.
+    /** Occurs when the audio publishing state changes.
+     *
+     * @since v3.1.0
+     *
+     * This callback indicates the publishing state change of the local audio stream.
+     *
+     * @param rtcChannel IChannel
+     * @param oldState The previous publishing state. For details, see #STREAM_PUBLISH_STATE.
+     * @param newState The current publishing state. For details, see #STREAM_PUBLISH_STATE.
+     * @param elapseSinceLastState The time elapsed (ms) from the previous state to the current state.
+     */
+    virtual void onAudioPublishStateChanged(IChannel *rtcChannel, STREAM_PUBLISH_STATE oldState, STREAM_PUBLISH_STATE newState, int elapseSinceLastState) {
+        (void)rtcChannel;
+        (void)oldState;
+        (void)newState;
+        (void)elapseSinceLastState;
+    }
 
-    @note
-    - To receive this callback, you need to call the \ref IChannel::enableAudioVolumeIndication(int, int, bool) "enableAudioVolumeIndication" method.
-    - This callback returns the user ID of the user with the highest voice volume during a period of time, instead of at the moment.
+    /** Occurs when the video publishing state changes.
+     *
+     * @since v3.1.0
+     *
+     * This callback indicates the publishing state change of the local video stream.
+     *
+     * @param rtcChannel IChannel
+     * @param oldState The previous publishing state. For details, see #STREAM_PUBLISH_STATE.
+     * @param newState The current publishing state. For details, see #STREAM_PUBLISH_STATE.
+     * @param elapseSinceLastState The time elapsed (ms) from the previous state to the current state.
+     */
+    virtual void onVideoPublishStateChanged(IChannel *rtcChannel, STREAM_PUBLISH_STATE oldState, STREAM_PUBLISH_STATE newState, int elapseSinceLastState) {
+        (void)rtcChannel;
+        (void)oldState;
+        (void)newState;
+        (void)elapseSinceLastState;
+    }
+
+    /** Occurs when the audio subscribing state changes.
+     *
+     * @since v3.1.0
+     *
+     * This callback indicates the subscribing state change of a remote audio stream.
+     *
+     * @param rtcChannel IChannel
+     * @param uid The ID of the remote user.
+     * @param oldState The previous subscribing state. For details, see #STREAM_SUBSCRIBE_STATE.
+     * @param newState The current subscribing state. For details, see #STREAM_SUBSCRIBE_STATE.
+     * @param elapseSinceLastState The time elapsed (ms) from the previous state to the current state.
+     */
+    virtual void onAudioSubscribeStateChanged(IChannel *rtcChannel, uid_t uid, STREAM_SUBSCRIBE_STATE oldState, STREAM_SUBSCRIBE_STATE newState, int elapseSinceLastState) {
+        (void)rtcChannel;
+        (void)uid;
+        (void)oldState;
+        (void)newState;
+        (void)elapseSinceLastState;
+    }
+
+    /** Occurs when the audio subscribing state changes.
+     *
+     * @since v3.1.0
+     *
+     * This callback indicates the subscribing state change of a remote video stream.
+     *
+     * @param rtcChannel IChannel=
+     * @param uid The ID of the remote user.
+     * @param oldState The previous subscribing state. For details, see #STREAM_SUBSCRIBE_STATE.
+     * @param newState The current subscribing state. For details, see #STREAM_SUBSCRIBE_STATE.
+     * @param elapseSinceLastState The time elapsed (ms) from the previous state to the current state.
+     */
+    virtual void onVideoSubscribeStateChanged(IChannel *rtcChannel, uid_t uid, STREAM_SUBSCRIBE_STATE oldState, STREAM_SUBSCRIBE_STATE newState, int elapseSinceLastState) {
+        (void)rtcChannel;
+        (void)uid;
+        (void)oldState;
+        (void)newState;
+        (void)elapseSinceLastState;
+    }
+
+    /** Occurs when the most active speaker is detected.
+
+    After a successful call of \ref IRtcEngine::enableAudioVolumeIndication(int, int, bool) "enableAudioVolumeIndication", 
+    the SDK continuously detects which remote user has the loudest volume. During the current period, the remote user, 
+    who is detected as the loudest for the most times, is the most active user.
+
+    When the number of user is no less than two and an active speaker exists, the SDK triggers this callback and reports the `uid` of the most active speaker.
+    - If the most active speaker is always the same user, the SDK triggers this callback only once.
+    - If the most active speaker changes to another user, the SDK triggers this callback again and reports the `uid` of the new active speaker.
     
     @param rtcChannel IChannel
-    @param uid User ID of the active speaker. A @p uid of 0 represents the local user.
+    @param uid The user ID of the most active speaker.
     */
     virtual void onActiveSpeaker(IChannel *rtcChannel, uid_t uid) {
         (void)rtcChannel;
         (void)uid;
     }
+	virtual void onFirstRemoteVideoFrame(IChannel *rtcChannel, uid_t uid, int width, int height, int elapsed) {
+		(void)rtcChannel;
+		(void)uid;
+		(void)width;
+		(void)height;
+		(void)elapsed;
+	}
+
+	virtual void onUserMuteAudio(IChannel *rtcChannel, uid_t uid, bool muted) {
+		(void)rtcChannel;
+		(void)uid;
+		(void)muted;
+	}
+
+	virtual void onFirstRemoteAudioDecoded(IChannel *rtcChannel, uid_t uid, int elapsed) {
+		(void)rtcChannel;
+		(void)uid;
+		(void)elapsed;
+	}
      /** Occurs when the video size or rotation of a specified user changes.
 
      @param rtcChannel IChannel
@@ -374,6 +472,11 @@ public:
         (void)rtcChannel;
         (void)code;
     }
+	virtual void onFirstRemoteAudioFrame(IChannel *rtcChannel, uid_t uid, int elapsed) {
+		(void)rtcChannel;
+		(void)uid;
+		(void)elapsed;
+	}
     /**
      Occurs when the state of the RTMP streaming changes.
  
@@ -392,10 +495,34 @@ public:
         (RTMP_STREAM_PUBLISH_STATE) state;
         (RTMP_STREAM_PUBLISH_ERROR) errCode;
     }
-     /** Occurs when the publisher's transcoding is updated. 
- 
-     When the `LiveTranscoding` class in the \ref ar::rtc::IChannel::setLiveTranscoding "setLiveTranscoding" method updates, the SDK triggers the `onTranscodingUpdated` callback to report the update information to the local host.
- 
+	virtual void onStreamPublished(IChannel *rtcChannel, const char *url, int error) {
+		(void)rtcChannel;
+		(void)url;
+		(void)error;
+	}
+
+	virtual void onStreamUnpublished(IChannel *rtcChannel, const char *url) {
+		(void)rtcChannel;
+		(void)url;
+	}
+    /** Reports events during the RTMP streaming.
+     *
+     * @since v3.1.0
+     *
+     * @param rtcChannel IChannel
+     * @param url The RTMP streaming URL.
+     * @param eventCode The event code. See #RTMP_STREAMING_EVENT
+     */
+    virtual void onRtmpStreamingEvent(IChannel *rtcChannel, const char* url, RTMP_STREAMING_EVENT eventCode) {
+        (void) rtcChannel;
+        (void) url;
+        (RTMP_STREAMING_EVENT) eventCode;
+    }
+
+     /** Occurs when the publisher's transcoding is updated.
+
+     When the `LiveTranscoding` class in the \ref agora::rtc::IChannel::setLiveTranscoding "setLiveTranscoding" method updates, the SDK triggers the `onTranscodingUpdated` callback to report the update information to the local host.
+
      @note If you call the `setLiveTranscoding` method to set the LiveTranscoding class for the first time, the SDK does not trigger the `onTranscodingUpdated` callback.
      
      @param rtcChannel IChannel
@@ -415,6 +542,19 @@ public:
         (void)url;
         (void)uid;
         (void)status;
+    }
+    /** Occurs when the published media stream falls back to an audio-only stream due to poor network conditions or switches back to the video after the network conditions improve.
+
+    If you call \ref IRtcEngine::setLocalPublishFallbackOption "setLocalPublishFallbackOption" and set *option* as #STREAM_FALLBACK_OPTION_AUDIO_ONLY, the SDK triggers this callback when the published stream falls back to audio-only mode due to poor uplink conditions, or when the audio stream switches back to the video after the uplink network condition improves.
+
+    @param rtcChannel IChannel
+    @param isFallbackOrRecover Whether the published stream falls back to audio-only or switches back to the video:
+    - true: The published stream falls back to audio-only due to poor network conditions.
+    - false: The published stream switches back to the video after the network conditions improve.
+    */
+    virtual void onLocalPublishFallbackToAudioOnly(IChannel *rtcChannel, bool isFallbackOrRecover) {
+        (void)rtcChannel;
+        (void)isFallbackOrRecover;
     }
     /** Occurs when the remote media stream falls back to audio-only stream
      * due to poor network conditions or switches back to the video stream
@@ -781,7 +921,7 @@ public:
      - 0: Success.
      - < 0: Failure.
      */
-    virtual int setRemoteVoicePosition(int uid, double pan, double gain) = 0;
+    virtual int setRemoteVoicePosition(uid_t uid, double pan, double gain) = 0;
     /** Updates the display mode of the video view of a remote user.
 
      After initializing the video view of a remote user, you can call this method to update its rendering and mirror modes. 
@@ -1213,6 +1353,36 @@ public:
      */
     virtual IChannel* createChannel(const char *channelId) = 0;
     
+};
+
+enum AppType {
+	APP_TYPE_NATIVE = 0,
+	APP_TYPE_COCOS = 1,
+	APP_TYPE_UNITY = 2,
+	APP_TYPE_ELECTRON = 3,
+	APP_TYPE_FLUTTER = 4,
+	APP_TYPE_UNREAL = 5,
+	APP_TYPE_XAMARIN = 6,
+	APP_TYPE_APICLOUD = 7,
+};
+
+class IRtcEngine3 : public IRtcEngine2
+{
+public:
+	/**
+	* Specify video stream parameters based on video profile
+	* @param [in] width
+	*        width of video resolution in pixel
+	* @param [in] height
+	*        height of video resolution in pixel
+	* @param [in] frameRate
+	*        frame rate in fps
+	* @param [in] bitrate
+	*        bit rate in kbps
+	* @return return 0 if success or an error code
+	*/
+	virtual int setVideoProfileEx(int width, int height, int frameRate, int bitrate) = 0;
+	virtual int setAppType(AppType appType) = 0;
 };
 
 ////////////////////////////////////////////////////////
