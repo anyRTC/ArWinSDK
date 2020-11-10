@@ -17,8 +17,12 @@
 #include "IArMediaEngine.h"
 #endif
 
+#ifndef AR
 #define AR ar::rtc
+#endif
+#ifndef AU
 #define AU ar::util
+#endif
 
 namespace ar {
 namespace rtc {
@@ -4670,7 +4674,7 @@ public:
          - For the receiver: the ID of the user who sent the metadata.
          - For the sender: ignore it.
          */
-        unsigned int uid;
+        char* uid;
         /** Buffer size of the sent or received Metadata.
          */
         unsigned int size;
@@ -6255,7 +6259,7 @@ public:
      @param mode Sets the use mode (see #RAW_AUDIO_FRAME_OP_MODE_TYPE) of the *onPlaybackAudioFrame* callback.
      @param samplesPerCall Sets the number of samples returned in the *onPlaybackAudioFrame* callback. `samplesPerCall` is usually set as 1024 for RTMP streaming.
      
-     @note The SDK triggers the `onPlaybackAudioFrame` callback according to the sample interval. Ensure that the sample interval >= 0.01 (s). And, Sample interval (sec) = `samplePerCall`/(`sampleRate` × `channel`).
+     @note The SDK triggers the `onPlaybackAudioFrame` callback according to the sample interval. Ensure that the sample interval >= 0.01 (s). And, Sample interval (sec) = `samplePerCall`/(`sampleRate` x `channel`).
      
      @return
      - 0: Success.
@@ -6268,7 +6272,7 @@ public:
      @param sampleRate Sets the sample rate (@p samplesPerSec) returned in the *onMixedAudioFrame* callback, which can be set as 8000, 16000, 32000, 44100, or 48000 Hz.
      @param samplesPerCall Sets the number of samples (`samples`) returned in the *onMixedAudioFrame* callback. `samplesPerCall` is usually set as 1024 for RTMP streaming.
      
-     @note The SDK triggers the `onMixedAudioFrame` callback according to the sample interval. Ensure that the sample interval >= 0.01 (s). And, Sample interval (sec) = `samplePerCall`/(`sampleRate` × `channels`).
+     @note The SDK triggers the `onMixedAudioFrame` callback according to the sample interval. Ensure that the sample interval >= 0.01 (s). And, Sample interval (sec) = `samplePerCall`/(`sampleRate` x `channels`).
     
      @return
      - 0: Success.
