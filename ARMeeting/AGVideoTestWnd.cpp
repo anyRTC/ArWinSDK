@@ -46,7 +46,7 @@ int CAGVideoTestWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	DWORD dwWndStyle = WS_VISIBLE | WS_CHILD;
 	rcChildRect.SetRect(15, 0, lpCreateStruct->cx-30, lpCreateStruct->cy);
-	m_wndVideoWnd.Create(NULL, _T("AgoraVideoWnd"), dwWndStyle, rcChildRect, this, IDC_STATIC);
+	m_wndVideoWnd.Create(NULL, _T("anyRTCVideoWnd"), dwWndStyle, rcChildRect, this, IDC_STATIC);
 
 	return 0;
 }

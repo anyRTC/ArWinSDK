@@ -1,5 +1,5 @@
 
-// AgoraVideoCall.cpp : Defines the class behaviors for the application.
+// anyRTCVideoCall.cpp : Defines the class behaviors for the application.
 //
 
 #include "stdafx.h"
@@ -11,13 +11,13 @@
 #endif
 
 
-// CAgoraVideoCallApp
+// CanyRTCVideoCallApp
 
 BEGIN_MESSAGE_MAP(CARMeetingApp, CWinApp)
 END_MESSAGE_MAP()
 
 
-// CAgoraVideoCallApp construction
+// CanyRTCVideoCallApp construction
 
 CARMeetingApp::CARMeetingApp()
 {
@@ -29,12 +29,12 @@ CARMeetingApp::CARMeetingApp()
 }
 
 
-// The one and only CAgoraVideoCallApp object
+// The one and only CanyRTCVideoCallApp object
 
 CARMeetingApp theApp;
 
 
-// CAgoraVideoCallApp initialization
+// CanyRTCVideoCallApp initialization
 
 BOOL CARMeetingApp::InitInstance()
 {

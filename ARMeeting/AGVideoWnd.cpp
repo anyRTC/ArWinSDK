@@ -84,7 +84,7 @@ void CAGInfoWnd::OnPaint()
 		// 640x480,15fps,400k
 		GetClientRect(&rcClient);
 		rcClient.top += 4;
-		strTip.Format(_T("%dx%d, %dfps, %dKbps"), m_nWidth, m_nHeight, m_nFps, m_nBitrate/1024);
+		strTip.Format(_T("%dx%d, %dfps, %dKbps"), m_nWidth, m_nHeight, m_nFps, m_nBitrate);
 		dc.DrawText(strTip, &rcClient, DT_VCENTER | DT_CENTER);
 	}
 }

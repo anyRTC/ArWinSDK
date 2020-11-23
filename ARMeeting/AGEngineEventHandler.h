@@ -23,7 +23,7 @@ public:
 
 	static CString LoadAppID();
 	
-	IRtcEngine *GetEngine() { return m_lpAgoraEngine; }
+	IRtcEngine *GetEngine() { return m_lpArEngine; }
 
 	virtual void onJoinChannelSuccess(const char* channel, uid_t uid, int elapsed);
 	virtual void onRejoinChannelSuccess(const char* channel, uid_t uid, int elapsed);
@@ -63,7 +63,7 @@ public:
 	virtual void onRefreshRecordingServiceStatus(int status);
 private:
 	IRtcEngineEventHandler&	m_rEventHandler;
-	IRtcEngine*				m_lpAgoraEngine;
+	IRtcEngine*				m_lpArEngine;
 
 	bool					m_bVideoEnable;
 	bool					m_bLocalAudioMuted;

@@ -778,7 +778,7 @@ void CVideoDlg::onLocalVideoStats(const LocalVideoStats& stats)
 }
 
 void CVideoDlg::onRemoteVideoStats(const RemoteVideoStats& stats)
-{
+{  
 	if (strcmp(stats.uid,SHARE_UID) == 0) {
 		m_wndBig.SetFrameRateInfo(stats.rendererOutputFrameRate);
 		m_wndBig.SetBitrateInfo(stats.receivedBitrate);

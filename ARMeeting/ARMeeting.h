@@ -12,7 +12,7 @@
 
 
 // CARMeetingApp:
-// See AgoraVideoCall.cpp for the implementation of this class
+// See anyRTCVideoCall.cpp for the implementation of this class
 //
 
 class CARMeetingApp : public CWinApp

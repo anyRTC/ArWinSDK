@@ -8,7 +8,7 @@
 IMPLEMENT_DYNAMIC(CAGEngineEventHandler, CWnd)
 CAGEngineEventHandler::CAGEngineEventHandler(IRtcEngineEventHandler&rEventHandler)
 	: m_rEventHandler(rEventHandler)
-	, m_lpAgoraEngine(NULL)
+	, m_lpArEngine(NULL)
 	, m_bVideoEnable(false)
 	, m_bLocalAudioMuted(false)
 	, m_bScreenCapture(false)
@@ -265,9 +265,9 @@ int CAGEngineEventHandler::Start()
 	ctx.appId = strAppID;
 #endif
 
-	m_lpAgoraEngine = (IRtcEngine *)createARRtcEngine();
-	m_lpAgoraEngine->initialize(ctx);
-	m_lpAgoraEngine->setClientRole(AR::CLIENT_ROLE_AUDIENCE);
+	m_lpArEngine = (IRtcEngine *)createARRtcEngine();
+	m_lpArEngine->initialize(ctx);
+	m_lpArEngine->setClientRole(AR::CLIENT_ROLE_AUDIENCE);
 	EnableVideo();
 
 	return 0;
@@ -275,13 +275,13 @@ int CAGEngineEventHandler::Start()
 
 void CAGEngineEventHandler::Stop()
 {
-	if (m_lpAgoraEngine != NULL)
+	if (m_lpArEngine != NULL)
 	{
-		m_lpAgoraEngine->stopAllEffects();
-		m_lpAgoraEngine->disableVideo();
-		m_lpAgoraEngine->leaveChannel();
-		m_lpAgoraEngine->release(true);
-		m_lpAgoraEngine = NULL;
+		m_lpArEngine->stopAllEffects();
+		m_lpArEngine->disableVideo();
+		m_lpArEngine->leaveChannel();
+		m_lpArEngine->release(true);
+		m_lpArEngine = NULL;
 	}
 
 	if (CWnd::GetSafeHwnd())
@@ -628,9 +628,15 @@ bool CAGEngineEventHandler::EnableVideo(bool bEnable)
 	int nRet = 0;
 
 	if (bEnable)
-		nRet = m_lpAgoraEngine->enableVideo();
+	{
+		nRet = m_lpArEngine->enableVideo();
+		m_lpArEngine->enableLocalVideo(true);
+	}
 	else
-		nRet = m_lpAgoraEngine->disableVideo();
+	{
+		m_lpArEngine->enableLocalVideo(false);
+		nRet = m_lpArEngine->disableVideo();
+	}
 
 	if (nRet == 0)
 		m_bVideoEnable = bEnable;
@@ -646,9 +652,9 @@ bool CAGEngineEventHandler::IsVideoEnabled()
 
 bool CAGEngineEventHandler::MuteLocalAudio(bool bMuted)
 {
-	ASSERT(m_lpAgoraEngine != NULL);
+	ASSERT(m_lpArEngine != NULL);
 
-	int ret = m_lpAgoraEngine->muteLocalAudioStream(bMuted);
+	int ret = m_lpArEngine->muteLocalAudioStream(bMuted);
 	if (ret == 0)
 		m_bLocalAudioMuted = bMuted;
 
@@ -663,9 +669,9 @@ bool CAGEngineEventHandler::IsLocalAudioMuted()
 
 bool CAGEngineEventHandler::MuteLocalVideo(bool bMuted)
 {
-	ASSERT(m_lpAgoraEngine != NULL);
+	ASSERT(m_lpArEngine != NULL);
 
-	int ret = m_lpAgoraEngine->muteLocalVideoStream(bMuted);
+	int ret = m_lpArEngine->muteLocalVideoStream(bMuted);
 	if (ret == 0)
 		m_bLocalVideoMuted = bMuted;
 
@@ -687,9 +693,9 @@ bool CAGEngineEventHandler::LocalVideoPreview(HWND hVideoWnd, bool bPreviewOn)
 		vc.uid = 0;
 		vc.view = NULL;
 		vc.renderMode = RENDER_MODE_TYPE::RENDER_MODE_FIT;
-		nRet = m_lpAgoraEngine->setupLocalVideo(vc);
+		nRet = m_lpArEngine->setupLocalVideo(vc);
 		MuteLocalVideo(true);
-		nRet = m_lpAgoraEngine->stopPreview();
+		nRet = m_lpArEngine->stopPreview();
 	}
 	else {
 		AR::VideoEncoderConfiguration vidEncoderConf;
@@ -699,15 +705,15 @@ bool CAGEngineEventHandler::LocalVideoPreview(HWND hVideoWnd, bool bPreviewOn)
 		vidEncoderConf.minBitrate = 128;
 		vidEncoderConf.frameRate = AR::FRAME_RATE_FPS_24;
 		vidEncoderConf.minFrameRate = 10;
-		nRet = m_lpAgoraEngine->setVideoEncoderConfiguration(vidEncoderConf);
+		nRet = m_lpArEngine->setVideoEncoderConfiguration(vidEncoderConf);
 
 		VideoCanvas vc;
-		vc.uid = 0;
+		vc.uid = 0; 
 		vc.view = hVideoWnd;
 		vc.renderMode = RENDER_MODE_TYPE::RENDER_MODE_FIT;
-		nRet = m_lpAgoraEngine->setupLocalVideo(vc);
+		nRet = m_lpArEngine->setupLocalVideo(vc);
 		MuteLocalVideo(false);
-		nRet = m_lpAgoraEngine->startPreview();
+		nRet = m_lpArEngine->startPreview();
 	}
 
 	return nRet == 0 ? true : false;
@@ -716,7 +722,7 @@ bool CAGEngineEventHandler::LocalVideoPreview(HWND hVideoWnd, bool bPreviewOn)
 
 BOOL CAGEngineEventHandler::EnableScreenCapture(HWND hWnd, int nCapFPS, LPCRECT lpCapRect, BOOL bEnable, int nBitrate)
 {
-	ASSERT(m_lpAgoraEngine != NULL);
+	ASSERT(m_lpArEngine != NULL);
 
 	int ret = 0;
 
@@ -733,14 +739,14 @@ BOOL CAGEngineEventHandler::EnableScreenCapture(HWND hWnd, int nCapFPS, LPCRECT 
 				::GetWindowRect(hWnd, &rc);
 				capParam.dimensions.width = rc.right - rc.left;
 				capParam.dimensions.height = rc.bottom - rc.top;
-				ret = m_lpAgoraEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
+				ret = m_lpArEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
 			}
 			else {
 				::GetWindowRect(::GetDesktopWindow(), &rc);
 				AR::Rectangle screenRegion = { rc.left, rc.right, rc.right - rc.left, rc.bottom - rc.top };
 				capParam.dimensions.width = rc.right - rc.left;
 				capParam.dimensions.height = rc.bottom - rc.top;
-				ret = m_lpAgoraEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
+				ret = m_lpArEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
 			}
 			//startScreenCapture(hWnd, nCapFPS, NULL, nBitrate);
 		}
@@ -754,16 +760,16 @@ BOOL CAGEngineEventHandler::EnableScreenCapture(HWND hWnd, int nCapFPS, LPCRECT 
 			rcCap.height = lpCapRect->bottom - lpCapRect->top;
 
 			if (hWnd)
-				ret = m_lpAgoraEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
+				ret = m_lpArEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
 			else {
 
 				AR::Rectangle screenRegion = rcCap;
-				ret = m_lpAgoraEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
+				ret = m_lpArEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
 			}
 		}
 	}
 	else
-		ret = m_lpAgoraEngine->stopScreenCapture();
+		ret = m_lpArEngine->stopScreenCapture();
 
 	if (ret == 0)
 		m_bScreenCapture = bEnable;
