@@ -46,11 +46,11 @@ class IAudioFrameObserver {
     /** The sample rate.
      */
     int samplesPerSec;  //sampling rate
-    /** The data buffer of the audio frame. When the audio frame uses a stereo channel, the data buffer is interleaved. 
+    /** The data buffer of the audio frame. When the audio frame uses a stereo channel, the data buffer is interleaved.
      The size of the data buffer is as follows: `buffer` = `samples` × `channels` × `bytesPerSample`.
      */
     void* buffer;  //data buffer
-      /** The timestamp of the external audio frame. You can use this parameter for the following purposes:
+      /** The timestamp (ms) of the external audio frame. You can use this parameter for the following purposes:
        - Restore the order of the captured audio frame.
        - Synchronize audio and video frames in video-related scenarios, including where external video sources are used.
        */
@@ -81,7 +81,6 @@ class IAudioFrameObserver {
   virtual bool onPlaybackAudioFrame(AudioFrame& audioFrame) = 0;
   /** Retrieves the mixed recorded and playback audio frame.
 
-  The SDK triggers this callback once every 10 ms.
 
    @note This callback only returns the single-channel data.
 
@@ -129,7 +128,7 @@ class IAudioFrameObserver {
   /** Gets the before-mixing playback audio frame from multiple channels.
 
   After you successfully register the audio frame observer, if you set the return
-  value of isMultipleChannelFrameWanted as true, the SDK triggers this callback each
+  value of \ref IAudioFrameObserver::isMultipleChannelFrameWanted "isMultipleChannelFrameWanted" as true, the SDK triggers this callback each
   time it receives a before-mixing audio frame from any of the channel.
 
   @param channelId The channel ID of this audio frame.
@@ -317,7 +316,9 @@ class IVideoFrameObserver {
    * - false: (Default) Do not mirror.
    */
   virtual bool getMirrorApplied() { return false; }
-  /** Sets whether to output the acquired video frame smoothly.
+  /** @since v3.0.0
+
+   Sets whether to output the acquired video frame smoothly.
 
    If you want the video frames acquired from \ref IVideoFrameObserver::onRenderVideoFrame "onRenderVideoFrame" to be more evenly spaced, you can register the `getSmoothRenderingEnabled` callback in the `IVideoFrameObserver` class and set its return value as `true`.
 
@@ -393,7 +394,12 @@ class IVideoFrameObserver {
 
 class IVideoFrame {
  public:
-  enum PLANE_TYPE { Y_PLANE = 0, U_PLANE = 1, V_PLANE = 2, NUM_OF_PLANES = 3 };
+  enum PLANE_TYPE {
+    Y_PLANE = 0,
+    U_PLANE = 1,
+    V_PLANE = 2,
+    NUM_OF_PLANES = 3
+  };
   enum VIDEO_TYPE {
     VIDEO_TYPE_UNKNOWN = 0,
     VIDEO_TYPE_I420 = 1,
@@ -624,6 +630,14 @@ struct ExternalVideoFrame
     /** Timestamp of the incoming video frame (ms). An incorrect timestamp results in frame loss or unsynchronized audio and video.
      */
     long long timestamp;
+
+    ExternalVideoFrame()
+    :cropLeft(0)
+    ,cropTop(0)
+    ,cropRight(0)
+    ,cropBottom(0)
+    ,rotation(0)
+    {}
 };
 
 class IMediaEngine {
