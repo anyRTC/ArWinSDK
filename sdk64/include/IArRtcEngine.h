@@ -267,7 +267,7 @@ enum LOCAL_VIDEO_STREAM_ERROR {
     /** 12: The error code indicates that a window shared by the window ID has been closed, or a full-screen window
      * shared by the window ID has exited full-screen mode.
      * After exiting full-screen mode, remote users cannot see the shared window. To prevent remote users from seeing a
-     * black screen, Agora recommends that you immediately stop screen sharing.
+     * black screen, AR recommends that you immediately stop screen sharing.
      *
      * Common scenarios for reporting this error code:
      * - When the local user closes the shared window, the SDK reports this error code.
@@ -637,7 +637,7 @@ enum CHANNEL_PROFILE_TYPE
     CHANNEL_PROFILE_LIVE_BROADCASTING = 1,
    /** 2: Gaming. This profile uses a codec with a lower bitrate and consumes less power. Applies to the gaming scenario, where all game players can talk freely.
     *
-    * @note Agora does not recommend using this setting.
+    * @note AR does not recommend using this setting.
     */
     CHANNEL_PROFILE_GAME = 2,
 };
@@ -1054,17 +1054,17 @@ enum VOICE_BEAUTIFIER_PRESET
     VOICE_BEAUTIFIER_OFF = 0x00000000,
     /** A more magnetic voice.
      *
-     * @note Agora recommends using this enumerator to process a male-sounding voice; otherwise, you may experience vocal distortion.
+     * @note AR recommends using this enumerator to process a male-sounding voice; otherwise, you may experience vocal distortion.
      */
     CHAT_BEAUTIFIER_MAGNETIC = 0x01010100,
     /** A fresher voice.
      *
-     * @note Agora recommends using this enumerator to process a female-sounding voice; otherwise, you may experience vocal distortion.
+     * @note AR recommends using this enumerator to process a female-sounding voice; otherwise, you may experience vocal distortion.
      */
     CHAT_BEAUTIFIER_FRESH = 0x01010200,
     /** A more vital voice.
      *
-     * @note Agora recommends using this enumerator to process a female-sounding voice; otherwise, you may experience vocal distortion.
+     * @note AR recommends using this enumerator to process a female-sounding voice; otherwise, you may experience vocal distortion.
      */
     CHAT_BEAUTIFIER_VITALITY = 0x01010300,
     /** A more vigorous voice.
@@ -1101,28 +1101,28 @@ enum AUDIO_EFFECT_PRESET
     AUDIO_EFFECT_OFF = 0x00000000,
     /** An audio effect typical of a KTV venue.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
     ROOM_ACOUSTICS_KTV = 0x02010100,
     /** An audio effect typical of a concert hall.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
     ROOM_ACOUSTICS_VOCAL_CONCERT = 0x02010200,
     /** An audio effect typical of a recording studio.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
     ROOM_ACOUSTICS_STUDIO = 0x02010300,
     /** An audio effect typical of a vintage phonograph.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
@@ -1136,14 +1136,14 @@ enum AUDIO_EFFECT_PRESET
     ROOM_ACOUSTICS_VIRTUAL_STEREO = 0x02010500,
     /** A more spatial audio effect.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
     ROOM_ACOUSTICS_SPACIAL = 0x02010600,
     /** A more ethereal audio effect.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`
      * before setting this enumerator.
      */
@@ -1161,8 +1161,8 @@ enum AUDIO_EFFECT_PRESET
     /** The voice of an uncle.
      *
      * @note
-     * - Agora recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * - AR recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
@@ -1170,8 +1170,8 @@ enum AUDIO_EFFECT_PRESET
     /** The voice of an old man.
      *
      * @note
-     * - Agora recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
+     * - AR recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
      * the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before setting
      * this enumerator.
      */
@@ -1179,8 +1179,8 @@ enum AUDIO_EFFECT_PRESET
     /** The voice of a boy.
      *
      * @note
-     * - Agora recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
+     * - AR recommends using this enumerator to process a male-sounding voice; otherwise, you may not hear the anticipated voice effect.
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
      * the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
@@ -1188,8 +1188,8 @@ enum AUDIO_EFFECT_PRESET
     /** The voice of a young woman.
      *
      * @note
-     * - Agora recommends using this enumerator to process a female-sounding voice; otherwise, you may not hear the anticipated voice effect.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
+     * - AR recommends using this enumerator to process a female-sounding voice; otherwise, you may not hear the anticipated voice effect.
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
      * the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
@@ -1197,36 +1197,36 @@ enum AUDIO_EFFECT_PRESET
     /** The voice of a girl.
      *
      * @note
-     * - Agora recommends using this enumerator to process a female-sounding voice; otherwise, you may not hear the anticipated voice effect.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
+     * - AR recommends using this enumerator to process a female-sounding voice; otherwise, you may not hear the anticipated voice effect.
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting
      * the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
     VOICE_CHANGER_EFFECT_GIRL = 0x02020500,
     /** The voice of Pig King, a character in Journey to the West who has a voice like a growling bear.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
     VOICE_CHANGER_EFFECT_PIGKING = 0x02020600,
     /** The voice of Hulk.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
     VOICE_CHANGER_EFFECT_HULK = 0x02020700,
     /** An audio effect typical of R&B music.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
     STYLE_TRANSFORMATION_RNB = 0x02030100,
     /** An audio effect typical of popular music.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
@@ -1234,7 +1234,7 @@ enum AUDIO_EFFECT_PRESET
     /** A pitch correction effect that corrects the user's pitch based on the pitch of the natural C major scale.
      * To change the basic mode and tonic pitch, call \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters" after this method.
      *
-     * @note To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * @note To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before
      * setting this enumerator.
      */
@@ -6458,7 +6458,7 @@ public:
      *
      * You can set different voice beautifier effects for different scenarios. See *Set the Voice Beautifier and Audio Effects*.
      *
-     * To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
+     * To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile" and
      * setting the `scenario` parameter to `AUDIO_SCENARIO_GAME_STREAMING(3)` and the `profile` parameter to
      * `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before calling this method.
      *
@@ -6466,8 +6466,8 @@ public:
      * - You can call this method either before or after joining a channel.
      * - Do not set the `profile` parameter of \ref IRtcEngine::setAudioProfile "setAudioProfile" to `AUDIO_PROFILE_SPEECH_STANDARD(1)`
      * or `AUDIO_PROFILE_IOT(6)`; otherwise, this method call fails.
-     * - This method works best with the human voice. Agora does not recommend using this method for audio containing music.
-     * - After calling this method, Agora recommends not calling the following methods, because they can override \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters":
+     * - This method works best with the human voice. AR does not recommend using this method for audio containing music.
+     * - After calling this method, AR recommends not calling the following methods, because they can override \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters":
      *  - \ref IRtcEngine::setAudioEffectPreset "setAudioEffectPreset"
      *  - \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset"
      *  - \ref IRtcEngine::setLocalVoiceReverbPreset "setLocalVoiceReverbPreset"
@@ -6493,18 +6493,18 @@ public:
      *
      * You can set different audio effects for different scenarios. See *Set the Voice Beautifier and Audio Effects*.
      *
-     * To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `scenario` parameter to `AUDIO_SCENARIO_GAME_STREAMING(3)` before calling this method.
      *
      * @note
      * - You can call this method either before or after joining a channel.
      * - Do not set the profile `parameter` of `setAudioProfile` to `AUDIO_PROFILE_SPEECH_STANDARD(1)` or `AUDIO_PROFILE_IOT(6)`;
      * otherwise, this method call fails.
-     * - This method works best with the human voice. Agora does not recommend using this method for audio containing music.
+     * - This method works best with the human voice. AR does not recommend using this method for audio containing music.
      * - If you call this method and set the `preset` parameter to enumerators except `ROOM_ACOUSTICS_3D_VOICE` or `PITCH_CORRECTION`,
      * do not call \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters"; otherwise, `setAudioEffectParameters`
      * overrides this method.
-     * - After calling this method, Agora recommends not calling the following methods, because they can override `setAudioEffectPreset`:
+     * - After calling this method, AR recommends not calling the following methods, because they can override `setAudioEffectPreset`:
      *  - \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset"
      *  - \ref IRtcEngine::setLocalVoiceReverbPreset "setLocalVoiceReverbPreset"
      *  - \ref IRtcEngine::setLocalVoiceChanger "setLocalVoiceChanger"
@@ -6526,7 +6526,7 @@ public:
      * Call this method to set the following parameters for the local user who send an audio stream:
      * - 3D voice effect: Sets the cycle period of the 3D voice effect.
      * - Pitch correction effect: Sets the basic mode and tonic pitch of the pitch correction effect. Different songs
-     * have different modes and tonic pitches. Agora recommends bounding this method with interface elements to enable
+     * have different modes and tonic pitches. AR recommends bounding this method with interface elements to enable
      * users to adjust the pitch correction interactively.
      *
      * After setting parameters, all users in the channel can hear the relevant effect.
@@ -6538,12 +6538,12 @@ public:
      *
      * @note
      * - You can call this method either before or after joining a channel.
-     * - To achieve better audio effect quality, Agora recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
+     * - To achieve better audio effect quality, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile"
      * and setting the `scenario` parameter to `AUDIO_SCENARIO_GAME_STREAMING(3)` before calling this method.
      * - Do not set the `profile` parameter of \ref IRtcEngine::setAudioProfile "setAudioProfile" to `AUDIO_PROFILE_SPEECH_STANDARD(1)` or
      * `AUDIO_PROFILE_IOT(6)`; otherwise, this method call fails.
-     * - This method works best with the human voice. Agora does not recommend using this method for audio containing music.
-     * - After calling this method, Agora recommends not calling the following methods, because they can override `setAudioEffectParameters`:
+     * - This method works best with the human voice. AR does not recommend using this method for audio containing music.
+     * - After calling this method, AR recommends not calling the following methods, because they can override `setAudioEffectParameters`:
      *  - \ref IRtcEngine::setAudioEffectPreset "setAudioEffectPreset"
      *  - \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset"
      *  - \ref IRtcEngine::setLocalVoiceReverbPreset "setLocalVoiceReverbPreset"
@@ -6557,7 +6557,7 @@ public:
      *  - Call \ref IRtcEngine::setAudioProfile "setAudioProfile" and set the `profile` parameter to `AUDIO_PROFILE_MUSIC_STANDARD_STEREO(3)`
      * or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before setting this enumerator; otherwise, the enumerator setting does not take effect.
      *  - If the 3D voice effect is enabled, users need to use stereo audio playback devices to hear the anticipated voice effect.
-     * - Pitch correction effect: `PITCH_CORRECTION`. To achieve better audio effect quality, Agora recommends calling
+     * - Pitch correction effect: `PITCH_CORRECTION`. To achieve better audio effect quality, AR recommends calling
      * \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting the `profile` parameter to `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or
      * `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)` before setting this enumerator.
      * @param param1
@@ -6600,7 +6600,7 @@ public:
      * @see \ref IRtcEngine::setLogFileSize "setLogFileSize"
      * @see \ref IRtcEngine::setLogFilter "setLogFilter"
      *
-     * @param filePath The absolute path of log files. The default file path is `C: \Users\<user_name>\AppData\Local\Agora\<process_name>\agorasdk.log`.
+     * @param filePath The absolute path of log files. The default file path is `C: \Users\<user_name>\AppData\Local\AR\<process_name>\agorasdk.log`.
      * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
      *
      * @return

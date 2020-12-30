@@ -117,7 +117,7 @@ class IAudioFrameObserver {
    - Once you set the return value of this callback as true, the SDK triggers
    only the \ref IAudioFrameObserver::onPlaybackAudioFrameBeforeMixingEx "onPlaybackAudioFrameBeforeMixingEx" callback
    to send the before-mixing audio frame. \ref IAudioFrameObserver::onPlaybackAudioFrameBeforeMixing "onPlaybackAudioFrameBeforeMixing" is not triggered.
-   In the multi-channel scenario, Agora recommends setting the return value as true.
+   In the multi-channel scenario, AR recommends setting the return value as true.
    - If you set the return value of this callback as false, the SDK triggers only the `onPlaybackAudioFrameBeforeMixing` callback to send the audio data.
    @return
    - `true`: Receive audio data from multiple channels.
@@ -363,7 +363,7 @@ class IVideoFrameObserver {
 
    @note
    - Once you set the return value of this callback as true, the SDK triggers only the `onRenderVideoFrameEx` callback to
-   send the video frame. onRenderVideoFrame will not be triggered. In the multi-channel scenario, Agora recommends setting the return value as true.
+   send the video frame. onRenderVideoFrame will not be triggered. In the multi-channel scenario, AR recommends setting the return value as true.
    - If you set the return value of this callback as false, the SDK triggers only the `onRenderVideoFrame` callback to send the video data.
    @return
    - `true`: Receive video data from multiple channels.

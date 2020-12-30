@@ -179,10 +179,10 @@ enum WARN_CODE_TYPE
     /** 1019: Audio Device Module: no valid audio data is recorded.
     */
     WARN_ADM_RECORD_AUDIO_SILENCE = 1019,
-    /** 1020: Audio device module: The audio playback frequency is abnormal, which may cause audio freezes. This abnormality is caused by high CPU usage. Agora recommends stopping other apps.
+    /** 1020: Audio device module: The audio playback frequency is abnormal, which may cause audio freezes. This abnormality is caused by high CPU usage. AR recommends stopping other apps.
     */
     WARN_ADM_PLAYOUT_MALFUNCTION = 1020,
-    /** 1021: Audio device module: the audio recording frequency is abnormal, which may cause audio freezes. This abnormality is caused by high CPU usage. Agora recommends stopping other apps.
+    /** 1021: Audio device module: the audio recording frequency is abnormal, which may cause audio freezes. This abnormality is caused by high CPU usage. AR recommends stopping other apps.
     */
     WARN_ADM_RECORD_MALFUNCTION = 1021,
     /** 1025: The audio playback or recording is interrupted by system events (such as a phone call).
@@ -212,7 +212,7 @@ enum WARN_CODE_TYPE
      */
     WARN_ADM_WINDOWS_NO_DATA_READY_EVENT = 1040,
     /** 1042: Audio device module: The audio recording device is different from the audio playback device,
-     * which may cause echoes problem. Agora recommends using the same audio device to record and playback
+     * which may cause echoes problem. AR recommends using the same audio device to record and playback
      * audio.
      */
     WARN_ADM_INCONSISTENT_AUDIO_DEVICE = 1042,
