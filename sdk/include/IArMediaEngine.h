@@ -759,6 +759,8 @@ class IMediaEngine {
      - < 0: Failure.
      */
     virtual int pushVideoFrame(ExternalVideoFrame *frame) = 0;
+    
+    virtual void SetHeadset(bool bHead) = 0;
 };
 
 }  // namespace media
