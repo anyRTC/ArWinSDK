@@ -1574,6 +1574,11 @@ enum STREAM_FALLBACK_OPTIONS
      /** 2: Prioritizes the local preview quality. The SDK chooses higher camera output parameters to improve the local video preview quality. This option requires extra CPU and RAM usage for video pre-processing.
      */
      CAPTURER_OUTPUT_PREFERENCE_PREVIEW = 2,
+     /** 3: Allows you to customize the width and height of the video image captured by the local camera.
+      *
+      * @since v3.3.0
+      */
+     CAPTURER_OUTPUT_PREFERENCE_MANUAL = 3,
  };
 
 /** The priority of the remote user.
@@ -2255,6 +2260,22 @@ struct RemoteAudioStats
      * The total publish duration (ms) of the remote audio stream.
      */
     int publishDuration;
+    /**
+     * Quality of experience (QoE) of the local user when receiving a remote audio stream. See #EXPERIENCE_QUALITY_TYPE.
+     *
+     * @since v3.3.0
+     */
+    int qoeQuality;
+    /**
+     * The reason for poor QoE of the local user when receiving a remote audio stream. See #EXPERIENCE_POOR_REASON.
+     *
+     * @since v3.3.0
+     */
+    int qualityChangedReason;
+     /**
+     * The mos value of remote audio.
+     */
+    int mosValue;
 };
 
 /**
@@ -2643,12 +2664,71 @@ typedef struct LiveTranscoding {
 
      /** Camera capturer preference settings. See: #CAPTURER_OUTPUT_PREFERENCE. */
      CAPTURER_OUTPUT_PREFERENCE preference;
+     /** The width (px) of the video image captured by the local camera.
+      * To customize the width of the video image, set `preference` as #CAPTURER_OUTPUT_PREFERENCE_MANUAL (3) first,
+      * and then use `captureWidth`.
+      *
+      * @since v3.3.0
+      */
+     int captureWidth;
+     /** The height (px) of the video image captured by the local camera.
+      * To customize the height of the video image, set `preference` as #CAPTURER_OUTPUT_PREFERENCE_MANUAL (3) first,
+      * and then use `captureHeight`.
+      *
+      * @since v3.3.0
+      */
+     int captureHeight;
      #if defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
      /** Camera direction settings (for Android/iOS only). See: #CAMERA_DIRECTION. */
      CAMERA_DIRECTION cameraDirection;
      #endif
- };
 
+     CameraCapturerConfiguration()
+        :preference(CAPTURER_OUTPUT_PREFERENCE_AUTO)
+        ,captureWidth(640)
+        ,captureHeight(480)
+        {}
+
+    CameraCapturerConfiguration(int width, int height)
+        :preference(CAPTURER_OUTPUT_PREFERENCE_MANUAL)
+        ,captureWidth(width)
+        ,captureHeight(height)
+        {}
+ };
+/** The configurations for the data stream.
+ *
+ * @since v3.3.0
+ *
+ * |`syncWithAudio` |`ordered`| SDK behaviors|
+ * |--------------|--------|-------------|
+ * | false   |  false   |The SDK triggers the `onStreamMessage` callback immediately after the receiver receives a data packet      |
+ * | true |  false | <p>If the data packet delay is within the audio delay, the SDK triggers the `onStreamMessage` callback when the synchronized audio packet is played out.</p><p>If the data packet delay exceeds the audio delay, the SDK triggers the `onStreamMessage` callback as soon as the data packet is received. In this case, the data packet is not synchronized with the audio packet.</p>   |
+ * | false  |  true | <p>If the delay of a data packet is within five seconds, the SDK corrects the order of the data packet.</p><p>If the delay of a data packet exceeds five seconds, the SDK discards the data packet.</p>     |
+ * |  true  |  true   | <p>If the delay of a data packet is within the audio delay, the SDK corrects the order of the data packet.</p><p>If the delay of a data packet exceeds the audio delay, the SDK discards this data packet.</p>     |
+ */
+struct DataStreamConfig {
+    /** Whether to synchronize the data packet with the published audio packet.
+     *
+     * - true: Synchronize the data packet with the audio packet.
+     * - false: Do not synchronize the data packet with the audio packet.
+     *
+     * When you set the data packet to synchronize with the audio, then if the data
+     * packet delay is within the audio delay, the SDK triggers the `onStreamMessage` callback when
+     * the synchronized audio packet is played out. Do not set this parameter as `true` if you
+     * need the receiver to receive the data packet immediately. Agora recommends that you set
+     * this parameter to `true` only when you need to implement specific functions, for example
+     * lyric synchronization.
+     */
+    bool syncWithAudio;
+    /** Whether the SDK guarantees that the receiver receives the data in the sent order.
+     *
+     * - true: Guarantee that the receiver receives the data in the sent order.
+     * - false: Do not guarantee that the receiver receives the data in the sent order.
+     *
+     * Do not set this parameter to `true` if you need the receiver to receive the data immediately.
+     */
+    bool ordered;
+};
 /** Configuration of the injected media stream.
  */
 struct InjectStreamConfig {
@@ -4992,6 +5072,41 @@ public:
     virtual void release() = 0;
 };
 
+/** The configuration of the log files.
+ *
+ * @since v3.3.0
+ */
+struct LogConfig
+{
+    /** The absolute path of log files.
+     *
+     * The default file path is:
+     * - Android: `/storage/emulated/0/Android/data/<package name>/files/agorasdk.log`
+     * - iOS: `App Sandbox/Library/caches/agorasdk.log`
+     * - macOS:
+     *  - Sandbox enabled: `App Sandbox/Library/Logs/agorasdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/agorasdk.log`.
+     *  - Sandbox disabled: `～/Library/Logs/agorasdk.log`.
+     * - Windows: `C:\Users\<user_name>\AppData\Local\Agora\<process_name>\agorasdk.log`
+     *
+     * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
+     */
+    const char* filePath;
+    /** The size (KB) of a log file. The default value is 1024 KB. If you set `fileSize` to 1024 KB, the SDK outputs at most 5 MB log files;
+     * if you set it to less than 1024 KB, the setting is invalid, and the maximum size of a log file is still 1024 KB.
+     */
+    int fileSize;
+    /** The output log level of the SDK. See #LOG_LEVEL.
+     *
+     * For example, if you set the log level to WARN, the SDK outputs the logs within levels FATAL, ERROR, and WARN.
+     */
+    LOG_LEVEL level;
+    LogConfig()
+    :filePath(NULL)
+    ,fileSize(-1)
+    ,level(LOG_LEVEL::LOG_LEVEL_INFO)
+    {}
+};
+
 /** Definition of RtcEngineContext.
 */
 struct RtcEngineContext
@@ -5015,6 +5130,17 @@ struct RtcEngineContext
      * For the regions that AR supports, see #AREA_CODE. After specifying the region, the app that integrates the AR SDK connects to the AR servers within that region.
      */
 	unsigned int areaCode;
+    /** The configuration of the log files that the SDK outputs. See LogConfig.
+     *
+     * @since v3.3.0
+     *
+     * By default, the SDK outputs five log files, `agorasdk.log`, `agorasdk_1.log`, `agorasdk_2.log`, `agorasdk_3.log`, `agorasdk_4.log`, each with
+     * a default size of 1024 KB. These log files are encoded in UTF-8. The SDK writes the latest logs in `agorasdk.log`. When `agorasdk.log` is
+     * full, the SDK deletes the log file with the earliest modification time among the other four, renames `agorasdk.log` to the name of the
+     * deleted log file, and creates a new `agorasdk.log` to record latest logs.
+     *
+     */
+    LogConfig logConfig;
     RtcEngineContext()
     :eventHandler(NULL)
     ,appId(NULL)
@@ -5270,7 +5396,7 @@ public:
      * ClientRoleOptions options;
      * options.audienceLatencyLevel = AUDIENCE_LATENCY_LEVEL_ULTRA_LOW_LATENCY;
      * options.audienceLatencyLevel = AUDIENCE_LATENCY_LEVEL_LOW_LATENCY;
-     * agoraEngine->setClientRole(role, options);
+     * arEngine->setClientRole(role, options);
      * ```
      *
      * @param role The role of a user in a live interactive streaming. See #CLIENT_ROLE_TYPE.
@@ -6624,16 +6750,16 @@ public:
     virtual int setAudioEffectParameters(AUDIO_EFFECT_PRESET preset, int param1, int param2) = 0;
     /** Sets the log files that the SDK outputs.
      *
-     * By default, the SDK outputs five log files, `agorasdk.log`, `agorasdk_1.log`, `agorasdk_2.log`, `agorasdk_3.log`, `agorasdk_4.log`, each with a default size of 1024 KB.
-     * These log files are encoded in UTF-8. The SDK writes the latest logs in `agorasdk.log`. When `agorasdk.log` is full, the SDK deletes the log file with the earliest
-     * modification time among the other four, renames `agorasdk.log` to the name of the deleted log file, and create a new `agorasdk.log` to record latest logs.
+     * By default, the SDK outputs five log files, `arsdk.log`, `arsdk_1.log`, `arsdk_2.log`, `arsdk_3.log`, `arsdk_4.log`, each with a default size of 1024 KB.
+     * These log files are encoded in UTF-8. The SDK writes the latest logs in `arsdk.log`. When `arsdk.log` is full, the SDK deletes the log file with the earliest
+     * modification time among the other four, renames `arsdk.log` to the name of the deleted log file, and create a new `arsdk.log` to record latest logs.
      *
-     * @note Ensure that you call this method immediately after calling \ref agora::rtc::IRtcEngine::initialize "initialize" , otherwise the output logs may not be complete.
+     * @note Ensure that you call this method immediately after calling \ref ar::rtc::IRtcEngine::initialize "initialize" , otherwise the output logs may not be complete.
      *
      * @see \ref IRtcEngine::setLogFileSize "setLogFileSize"
      * @see \ref IRtcEngine::setLogFilter "setLogFilter"
      *
-     * @param filePath The absolute path of log files. The default file path is `C: \Users\<user_name>\AppData\Local\AR\<process_name>\agorasdk.log`.
+     * @param filePath The absolute path of log files. The default file path is `C: \Users\<user_name>\AppData\Local\AR\<process_name>\arsdk.log`.
      * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
      *
      * @return

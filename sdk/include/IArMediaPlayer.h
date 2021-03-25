@@ -353,18 +353,18 @@ class IMediaPlayerObserver {
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-#define AGORA_PLAYER_API extern "C" __declspec(dllexport)
-#define AGORA_PLAYER_CALL
+#define AR_PLAYER_API extern "C" __declspec(dllexport)
+#define AR_PLAYER_CALL
 #elif defined(__APPLE__)
 #include <TargetConditionals.h>
-#define AGORA_PLAYER_API __attribute__((visibility("default"))) extern "C"
-#define AGORA_PLAYER_CALL
+#define AR_PLAYER_API __attribute__((visibility("default"))) extern "C"
+#define AR_PLAYER_CALL
 #elif defined(__ANDROID__) || defined(__linux__)
-#define AGORA_PLAYER_API extern "C" __attribute__((visibility("default")))
-#define AGORA_PLAYER_CALL
+#define AR_PLAYER_API extern "C" __attribute__((visibility("default")))
+#define AR_PLAYER_CALL
 #else
-#define AGORA_PLAYER_API extern "C"
-#define AGORA_PLAYER_CALL
+#define AR_PLAYER_API extern "C"
+#define AR_PLAYER_CALL
 #endif
 
 /**
@@ -373,6 +373,6 @@ class IMediaPlayerObserver {
  * - The pointer to \ref ar::rtc::IMediaPlayer "IMediaPlayer", if the method call succeeds.
  * - The empty pointer NULL, if the method call fails.
  */
-AGORA_PLAYER_API ar::rtc::IMediaPlayer* AGORA_PLAYER_CALL createArMediaPlayer();
+AR_PLAYER_API ar::rtc::IMediaPlayer* AR_PLAYER_CALL createArMediaPlayer();
 
 #endif  // __I_AR_MEDIA_PLAYER_H__

@@ -310,8 +310,8 @@ enum ERROR_CODE_TYPE
     ERR_NET_NOBUFS = 15,
     /** 17: The request to join the channel is rejected.
      *
-     * - This error usually occurs when the user is already in the channel, and still calls the method to join the channel, for example, \ref agora::rtc::IRtcEngine::joinChannel "joinChannel".
-     * - This error usually occurs when the user tries to join a channel during a call test (\ref agora::rtc::IRtcEngine::startEchoTest "startEchoTest"). Once you call \ref agora::rtc::IRtcEngine::startEchoTest "startEchoTest", you need to call \ref agora::rtc::IRtcEngine::stopEchoTest "stopEchoTest" before joining a channel.
+     * - This error usually occurs when the user is already in the channel, and still calls the method to join the channel, for example, \ref ar::rtc::IRtcEngine::joinChannel "joinChannel".
+     * - This error usually occurs when the user tries to join a channel during a call test (\ref ar::rtc::IRtcEngine::startEchoTest "startEchoTest"). Once you call \ref ar::rtc::IRtcEngine::startEchoTest "startEchoTest", you need to call \ref ar::rtc::IRtcEngine::stopEchoTest "stopEchoTest" before joining a channel.
      */
     ERR_JOIN_CHANNEL_REJECTED = 17,
     /** 18: The request to leave the channel is rejected.
@@ -340,10 +340,10 @@ enum ERROR_CODE_TYPE
     /** 102: The specified channel name is invalid. Please try to rejoin the channel with a valid channel name.
      */
     ERR_INVALID_CHANNEL_NAME = 102,
-    /** 103: Fails to get server resources in the specified region. Please try to specify another region when calling \ref agora::rtc::IRtcEngine::initialize "initialize".
+    /** 103: Fails to get server resources in the specified region. Please try to specify another region when calling \ref ar::rtc::IRtcEngine::initialize "initialize".
      */
     ERR_NO_SERVER_RESOURCES = 103,
-    /** **DEPRECATED** 109: Deprecated as of v2.4.1. Use CONNECTION_CHANGED_TOKEN_EXPIRED(9) in the \ref agora::rtc::IRtcEngineEventHandler::onConnectionStateChanged "onConnectionStateChanged" callback instead.
+    /** **DEPRECATED** 109: Deprecated as of v2.4.1. Use CONNECTION_CHANGED_TOKEN_EXPIRED(9) in the \ref ar::rtc::IRtcEngineEventHandler::onConnectionStateChanged "onConnectionStateChanged" callback instead.
 
      The token expired due to one of the following reasons:
      
@@ -802,6 +802,24 @@ enum LOG_FILTER_TYPE
      /** 0x0008: Outputs CRITICAL level log information. */
     LOG_FILTER_CRITICAL = 0x0008,
     LOG_FILTER_MASK = 0x80f,
+};
+/** The output log level of the SDK.
+ *
+ * @since v3.3.0
+ */
+enum class LOG_LEVEL {
+  /** 0: Do not output any log. */
+  LOG_LEVEL_NONE = 0x0000,
+  /** 0x0001: (Default) Output logs of the FATAL, ERROR, WARN and INFO level. We recommend setting your log filter as this level.
+   */
+  LOG_LEVEL_INFO = 0x0001,
+  /** 0x0002: Output logs of the FATAL, ERROR and WARN level.
+   */
+  LOG_LEVEL_WARN = 0x0002,
+  /** 0x0004: Output logs of the FATAL and ERROR level.  */
+  LOG_LEVEL_ERROR = 0x0004,
+  /** 0x0008: Output logs of the FATAL level.  */
+  LOG_LEVEL_FATAL = 0x0008,
 };
 } // namespace ar
 
