@@ -139,7 +139,7 @@ class IAudioFrameObserver {
   - `false`: The data in AudioFrame in invalid, and do not send this audio frame.
   */
   virtual bool onPlaybackAudioFrameBeforeMixingEx(const char *channelId,
-      unsigned int uid, AudioFrame& audioFrame) { return true; }
+      const char* uid, AudioFrame& audioFrame) { return true; }
 
 };
 
@@ -389,7 +389,7 @@ class IVideoFrameObserver {
    - `true`: Send this video frame.
    - `false`: Do not send this video frame.
    */
-  virtual bool onRenderVideoFrameEx(const char *channelId, unsigned int uid, VideoFrame& videoFrame) { return true; }
+  virtual bool onRenderVideoFrameEx(const char *channelId, const char* uid, VideoFrame& videoFrame) { return true; }
 };
 
 class IVideoFrame {
