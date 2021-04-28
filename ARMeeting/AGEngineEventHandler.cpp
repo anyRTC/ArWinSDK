@@ -267,6 +267,7 @@ int CAGEngineEventHandler::Start()
 
 	m_lpArEngine = (IRtcEngine *)createARRtcEngine();
 	m_lpArEngine->initialize(ctx);
+	m_lpArEngine->setChannelProfile(AR::CHANNEL_PROFILE_LIVE_BROADCASTING);
 	m_lpArEngine->setClientRole(AR::CLIENT_ROLE_AUDIENCE);
 	EnableVideo();
 

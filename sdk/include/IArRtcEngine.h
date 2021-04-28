@@ -1,7 +1,7 @@
 //
 //  ARRtcEngine SDK
 //
-//  Copyright (c) 2019 AR.io. All rights reserved.
+//  Copyright (c) 2019 anyrtc.io. All rights reserved.
 //
 
 /**
@@ -261,6 +261,16 @@ enum LOCAL_VIDEO_STREAM_ERROR {
     LOCAL_VIDEO_STREAM_ERROR_CAPTURE_FAILURE = 4,
     /** 5: The local video encoding fails. */
     LOCAL_VIDEO_STREAM_ERROR_ENCODE_FAILURE = 5,
+	/** 6: (iOS only) The application is in the background.
+	 *
+	 * @since v3.3.0
+	 */
+	LOCAL_VIDEO_STREAM_ERROR_CAPTURE_INBACKGROUND = 6,
+	/** 7: (iOS only) The application is running in Slide Over, Split View, or Picture in Picture mode.
+	 *
+	 * @since v3.3.0
+	 */
+	LOCAL_VIDEO_STREAM_ERROR_CAPTURE_MULTIPLE_FOREGROUND_APPS = 7,
     /** 11: The shared window is minimized when you call \ref IRtcEngine::startScreenCaptureByWindowId "startScreenCaptureByWindowId" to share a window.
      */
     LOCAL_VIDEO_STREAM_ERROR_SCREEN_CAPTURE_WINDOW_MINIMIZED = 11,
@@ -2715,7 +2725,7 @@ struct DataStreamConfig {
      * When you set the data packet to synchronize with the audio, then if the data
      * packet delay is within the audio delay, the SDK triggers the `onStreamMessage` callback when
      * the synchronized audio packet is played out. Do not set this parameter as `true` if you
-     * need the receiver to receive the data packet immediately. Agora recommends that you set
+     * need the receiver to receive the data packet immediately. AR recommends that you set
      * this parameter to `true` only when you need to implement specific functions, for example
      * lyric synchronization.
      */
@@ -3217,7 +3227,7 @@ public:
 };
 
 
-#if defined(_WIN32)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
 /** The capture type of the custom video source.
  */
 enum VIDEO_CAPTURE_TYPE {
@@ -3248,7 +3258,9 @@ public:
      * SDK rotates the video frame after receiving it. You can set the rotation angle as `0`, `90`, `180`, and `270`.
      * @param timestamp The Unix timestamp (ms) of the video frame. You must set a timestamp for each video frame.
      */
+#if defined(_WIN32)
     virtual void consumeRawVideoFrame(const unsigned char *buffer, AM::ExternalVideoFrame::VIDEO_PIXEL_FORMAT frameType, int width, int height, int rotation, long timestamp) = 0;
+#endif
 };
 
 /** The IVideoSource class. You can use it to customize the video source.
@@ -3306,7 +3318,9 @@ public:
      *
      * @return \ref AM::ExternalVideoFrame::VIDEO_PIXEL_FORMAT "VIDEO_PIXEL_FORMAT"
      */
+#if defined(_WIN32)
     virtual AM::ExternalVideoFrame::VIDEO_PIXEL_FORMAT getBufferType() = 0;
+#endif
     /** Gets the capture type of the custom video source.
      *
      * Before you initialize the custom video source, the SDK triggers this callback to query the capture type of the video source.
@@ -5086,7 +5100,7 @@ struct LogConfig
      * - macOS:
      *  - Sandbox enabled: `App Sandbox/Library/Logs/agorasdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/agorasdk.log`.
      *  - Sandbox disabled: `～/Library/Logs/agorasdk.log`.
-     * - Windows: `C:\Users\<user_name>\AppData\Local\Agora\<process_name>\agorasdk.log`
+     * - Windows: `C:\Users\<user_name>\AppData\Local\AR\<process_name>\agorasdk.log`
      *
      * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
      */
@@ -5289,72 +5303,58 @@ protected:
     virtual ~IRtcEngine() {}
 public:
 
-    /** Initializes the AR service.
+    /** 初始化 anyRTC SDK 服务.
      *
-     * Ensure that you call the
-     * \ref ar::rtc::IRtcEngine::createARRtcEngine
-     * "createARRtcEngine" and \ref ar::rtc::IRtcEngine::initialize
-     * "initialize" methods before calling any other API.
+     * 请确保在调用其他 API 前先调用 createARRtcEngine 和 initialize 创建并初始化 IRtcEngine
      *
-     * @param context Pointer to the RTC engine context. See RtcEngineContext.
+     * @param context Pointer to the RTC engine context. 详见 RtcEngineContext.
      *
      * @return
-     * - 0: Success.
-     * - < 0: Failure.
-     *  - `ERR_INVALID_APP_ID (101)`: The app ID is invalid. Check if it is in the correct format.
+     * - 0(ERR_OK): 方法调用成功.
+     * - < 0: 方法调用失败.
+	 *  - -1(ERR_FAILED): 一般性的错误（未明确归类）。
+	 *  - -2(ERR_INALID_ARGUMENT): 未提供 IRtcEngineEventHandler 指针。
+	 *  - -7(ERR_NOT_INITIALIZED): SDK 初始化失败。请检查 context 内容是否正确。
+	 *  - -22(ERR_RESOURCE_LIMITED): 资源申请失败。当 app 占用资源过多，或系统资源耗尽时，SDK 分配资源失败，会返回该错误
+     *  - -101(ERR_INVALID_APP_ID): 不是有效的 App ID.
      */
     virtual int initialize(const RtcEngineContext& context) = 0;
 
-    /** Releases all IRtcEngine resources.
+    /** 销毁 IRtcEngine 对象并释放资源.
      *
-     * Use this method for apps in which users occasionally make voice or video calls. When users do not make calls, you
-     * can free up resources for other operations. Once you call `release` to destroy the created `IRtcEngine` instance,
-     * you cannot use any method or callback in the SDK any more. If you want to use the real-time communication functions
-     * again, you must call \ref createAgoraRtcEngine "createAgoraRtcEngine" and \ref ar::rtc::IRtcEngine::initialize "initialize"
-     * to create a new `IRtcEngine` instance.
+     * 该方法释放 anyRTC SDK 使用的所有资源。有些 app 只在用户需要时才进行实时音视频通信，不需要时则将资源释放出来用于其他操作， 该方法适用于此类情况。调用 release 方法后，你将无法再使用 SDK 的其它方法和回调。如需再次使用实时音视频通信功能， 你必须重新依次调用 createARRtcEngine 和 initialize 方法创建一个新的 IRtcEngine 对象.
      *
-     * @note If you want to create a new `IRtcEngine` instance after destroying the current one, ensure that you wait
-     * till the `release` method completes executing.
+     * @note 如需在销毁后再次创建 IRtcEngine 对象，需要等待 release 方法执行结束后再创建实例.
      *
      * @param sync
-     * - true: Synchronous call. AR suggests calling this method in a sub-thread to avoid congestion in the main thread
-     * because the synchronous call and the app cannot move on to another task until the execution completes.
-     * Besides, you **cannot** call this method in any method or callback of the SDK. Otherwise, the SDK cannot release the
-     * resources occupied by the `IRtcEngine` instance until the callbacks return results, which may result in a deadlock.
-     * The SDK automatically detects the deadlock and converts this method into an asynchronous call, causing the test to
-     * take additional time.
-     * - false: Asynchronous call. Do not immediately uninstall the SDK's dynamic library after the call, or it may cause
-     * a crash due to the SDK clean-up thread not quitting.
+     * - true: 该方法为同步调用。需要等待 IRtcEngine 资源释放后才能执行其他操作，所以我们建议在子线程中调用该方法，避免主线程阻塞。此外，我们不建议在 SDK 的回调中调用 release，否则由于 SDK 要等待回调返回才能回收相关的对象资源，会造成死锁。SDK 会自动检测这种死锁并转为异步调用，但是检测本身会消耗额外的时间.
+     * - false: 该方法为异步调用。不需要等待 IRtcEngine 资源释放后就能执行其他操作。使用异步调用时要注意，不要在该调用后立即卸载 SDK 动态库，否则可能会因为 SDK 的清理线程还没有退出而崩溃.
      */
     virtual void release(bool sync=false) = 0;
 
-    /** Sets the channel profile of the AR IRtcEngine.
+    /** 设置频道场景.
      *
-     * The AR IRtcEngine differentiates channel profiles and applies optimization algorithms accordingly.
-     * For example, it prioritizes smoothness and low latency for a video call, and prioritizes video quality for the live interactive video streaming.
+     * 该方法用于设置 anyRTC IRtcEngine 频道的使用场景。RtcEngine 会针对不同的使用场景采用不同的优化策略，如通信场景偏好流畅，直播场景偏好画质.
      *
      * @warning
-     * - To ensure the quality of real-time communication, we recommend that all users in a channel use the same channel profile.
-     * - Call this method before calling \ref IRtcEngine::joinChannel "joinChannel" . You cannot set the channel profile once you have joined the channel.
-     * - The default audio route and video encoding bitrate are different in different channel profiles. For details, see
-     * \ref IRtcEngine::setDefaultAudioRouteToSpeakerphone "setDefaultAudioRouteToSpeakerphone" and \ref IRtcEngine::setVideoEncoderConfiguration "setVideoEncoderConfiguration".
+     * - 为保证实时音视频质量，我们建议相同频道内的用户使用同一种频道场景.
+     * - 该方法必须在 joinChannel 前调用和进行设置，进入频道后无法再设置.(Join之后设置返回0，参数不会生效，生成错误日志)
+     * - 不同的频道场景下，SDK 的默认音频路由和默认视频编码码率是不同的，详见 setDefaultAudioRouteToSpeakerphone 和 setVideoEncoderConfiguration 方法中的说明.
      *
-     * @param profile The channel profile of the AR IRtcEngine. See #CHANNEL_PROFILE_TYPE
+     * @param profile 频道使用场景. 详见 #CHANNEL_PROFILE_TYPE
      * @return
-     * - 0(ERR_OK): Success.
-     * - < 0: Failure.
-     *  - -2 (ERR_INVALID_ARGUMENT): The parameter is invalid.
-     *  - -7(ERR_NOT_INITIALIZED): The SDK is not initialized.
+     * - 0(ERR_OK): 方法调用成功.
+     * - < 0: 方法调用失败.
+     *  - -2 (ERR_INVALID_ARGUMENT): 参数无效.
+     *  - -7(ERR_NOT_INITIALIZED): SDK 尚未初始化.
      */
     virtual int setChannelProfile(CHANNEL_PROFILE_TYPE profile) = 0;
 
-    /** Sets the role of the user, such as a host or an audience (default), before joining a channel in the live interactive streaming.
+    /** 设置用户角色.
      *
-     * This method can be used to switch the user role in the live interactive streaming after the user joins a channel.
+     * 在加入频道前，用户需要通过本方法设置观众（默认）或主播。在加入频道后，用户可以通过本方法切换用户角色.
      *
-     * In the `LIVE_BROADCASTING` profile, when a user switches user roles after joining a channel, a successful \ref ar::rtc::IRtcEngine::setClientRole "setClientRole" method call triggers the following callbacks:
-     * - The local client: \ref ar::rtc::IRtcEngineEventHandler::onClientRoleChanged "onClientRoleChanged"
-     * - The remote client: \ref ar::rtc::IRtcEngineEventHandler::onUserJoined "onUserJoined" or \ref ar::rtc::IRtcEngineEventHandler::onUserOffline "onUserOffline" (BECOME_AUDIENCE)
+     * 直播场景下，如果你在加入频道后调用该方法切换用户角色，调用成功后，本地会触发 onClientRoleChanged 回调； 远端会触发 onUserJoined 回调或 onUserOffline (BECOME_AUDIENCE) 回调
      *
      * @note
      * This method applies only to the `LIVE_BROADCASTING` profile.
@@ -5411,67 +5411,60 @@ public:
      */
     virtual int setClientRole(CLIENT_ROLE_TYPE role, const ClientRoleOptions& options) = 0;
     /// @endcond
-    /** Joins a channel with the user ID.
+	/** 加入频道.
 
-     Users in the same channel can talk to each other, and multiple users in the same channel can start a group chat. Users with different App IDs cannot call each other.
+	 该方法让用户加入通话频道，在同一个频道内的用户可以互相通话，多个用户加入同一个频道，可以群聊。 使用不同 App ID 的 App 是不能互通的.
 
+	 如果已在通话中，用户必须调用 leaveChannel 退出当前通话，才能进入下一个频道.
 
-     You must call the \ref IRtcEngine::leaveChannel "leaveChannel" method to exit the current call before entering another channel.
+	 成功调用该方加入频道后，会触发如下回调:
+	 - 本地：客户端会触发：onJoinChannelSuccess 回调
+	 - 远端：通信场景下的用户和直播场景下的主播加入频道后，远端会触发 onUserJoined 回调.
 
-     A successful \ref ar::rtc::IRtcEngine::joinChannel "joinChannel" method call triggers the following callbacks:
-     - The local client: \ref ar::rtc::IRtcEngineEventHandler::onJoinChannelSuccess "onJoinChannelSuccess"
-     - The remote client: \ref ar::rtc::IRtcEngineEventHandler::onUserJoined "onUserJoined" , if the user joining the channel is in the Communication profile, or is a BROADCASTER in the Live Broadcast profile.
+	 在网络状况不理想的情况下，客户端可能会与 anyRTC 的服务器失去连接；SDK 会自动尝试重连，重连成功后，本地会触发 onRejoinChannelSuccess 回调.
 
-     When the connection between the client and AR's server is interrupted due to poor network conditions, the SDK tries reconnecting to the server. When the local client successfully rejoins the channel, the SDK triggers the \ref ar::rtc::IRtcEngineEventHandler::onRejoinChannelSuccess "onRejoinChannelSuccess" callback on the local client.
+	 用户成功加入频道后，默认订阅频道内所有其他用户的音频流和视频流，因此产生用量并影响计费。如果想取消订阅，可以通过调用相应的 mute 方法实现
 
-     @note A channel does not accept duplicate uids, such as two users with the same @p uid. If you set @p uid as 0, the system automatically assigns a @p uid. If you want to join a channel from different devices, ensure that each device has a different uid.
-     @warning Ensure that the App ID used for creating the token is the same App ID used by the \ref IRtcEngine::initialize "initialize" method for initializing the RTC engine. Otherwise, the CDN live streaming may fail.
+	 @note 频道内每个用户的用户 ID 必须是唯一的。如果将 uid 设为NULL或空字符串，系统将自动分配一个 uid。如果想要从不同的设备同时接入同一个频道，请确保每个设备上使用的 uid 是不同的.
+	 @warning 请务必确保用于生成 Token 的 App ID 和 initialize 方法初始化引擎时用的是同一个 App ID，否则会造成旁路推流失败.
 
-     @param token Pointer to the token generated by the application server. In most circumstances, a static App ID suffices. For added security, use a Channel Key.
-     - If the user uses a static App ID, *token* is optional and can be set as NULL.
-     - If the user uses a Channel Key, AR issues an additional App Certificate for you to generate a user key based on the algorithm and App Certificate for user authentication on the server.
-     @param channelId Pointer to the unique channel name for the AR RTC session in the string format smaller than 64 bytes. Supported characters:
-     - The 26 lowercase English letters: a to z
-     - The 26 uppercase English letters: A to Z
-     - The 10 numbers: 0 to 9
-     - The space
-     - "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ","
-     @param info (Optional) Pointer to additional information about the channel. This parameter can be set to NULL or contain channel related information. Other users in the channel will not receive this message.
-     @param uid (Optional) User ID. A 32-bit unsigned integer with a value ranging from 1 to 2<sup>32</sup>-1. The @p uid must be unique. If a @p uid is not assigned (or set to 0), the SDK assigns and returns a @p uid in the \ref IRtcEngineEventHandler::onJoinChannelSuccess "onJoinChannelSuccess" callback. Your application must record and maintain the returned *uid* since the SDK does not do so.
+	 @param 动态秘钥 (由应用的服务端生成。在大多数情况下，应用程序ID即可满足安全需求。为了增加更高安全性，还请使用令牌).
+	 - 安全要求不高: 将值设为 NULL.
+	 - 安全要求高: 将值设置为 Token。如果你已经启用了 App Certificate, 请务必使用 Token.
+	 @param channelId 标识通话的频道名称，长度在 64 字节以内的字符串。以下为支持的字符集范围（共 89 个字符）:
+	 - 26 个小写英文字母(All lowercase English letters): a to z.
+	 - 26 个大写英文字母(All uppercase English letters): A to Z.
+	 - 10个数字(All numeric characters): 0 to 9.
+	 - 空格(The space character).
+	 - 特殊字符(Punctuation characters and other symbols, including): "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+	 @param info (非必选项) 开发者需加入的任何附加信息。一般可设置为空字符串，或频道相关信息。该信息不会传递给频道内的其他用户.
+	 @param uid (非必选项) 用户 ID，最多32位字符串，并保证唯一性。如果不指定（即设为NULL或空字符串），SDK 会自动分配一个，并在 onJoinChannelSuccess 回调方法中返回，App 层必须记住该返回值并维护，SDK 不对该返回值进行维护.
 
-     @return
-     - 0: Success.
-     - < 0: Failure:
-        - #ERR_INVALID_ARGUMENT (-2)
-        - #ERR_NOT_READY (-3)
-        - #ERR_REFUSED (-5)
-     */
+	 @返回
+		- 0(ERR_OK): 方法调用成功。
+		- < 0: 方法调用失败。
+		- -2(ERR_INALID_ARGUMENT): 参数无效。
+		- -3(ERR_NOT_READY): SDK 初始化失败，请尝试重新初始化 SDK。
+		- -5(ERR_REFUSED): 调用被拒绝。可能有如下两个原因：
+			已经创建了一个同名的 IChannel 频道。
+			已经通过 IChannel 加入了一个频道，并在该 IChannel 频道中发布了音视频流。由于通过 IRtcEngine 加入频道会默认发布音视频流，而 SDK 不支持同时在两个频道发布音视频流，因此会报错。
+		- -7(ERR_NOT_INITIALIZED): SDK 尚未初始化，就调用该方法。请确认在调用 API 之前已创建 IRtcEngine 对象并完成初始化。
+	 */
     virtual int joinChannel(const char* token, const char* channelId, const char* info, uid_t uid) = 0;
-    /** Switches to a different channel.
+    /** 快速切换直播频道.
      *
-     * This method allows the audience of a Live-broadcast channel to switch
-     * to a different channel.
+     * 当直播频道中的观众想从一个频道切换到另一个频道时，可以调用该方法，实现快速切换.
      *
-     * After the user successfully switches to another channel, the
-     * \ref ar::rtc::IRtcEngineEventHandler::onLeaveChannel "onLeaveChannel"
-     *  and \ref ar::rtc::IRtcEngineEventHandler::onJoinChannelSuccess
-     * "onJoinChannelSuccess" callbacks are triggered to indicate that the
-     * user has left the original channel and joined a new one.
+     * 成功调用该方切换频道后，本地会先收到离开原频道的回调 onLeaveChannel，再收到成功加入新频道的回调 onJoinChannelSuccess。
+	 * 用户成功切换频道后，默认订阅频道内所有其他用户的音频流和视频流，因此产生用量并影响计费。如果想取消订阅，可以通过调用相应的 mute 方法实现。
      *
      * @note
-     * This method applies to the audience role in a Live-broadcast channel
-     * only.
+     * 该方法仅适用于直播场景中，角色为观众的用户。
      *
-     * @param token The token generated at your server:
-     * - For low-security requirements: You can use the temporary token
-     * generated in Console. For details, see
-     * [Get a temporary token](https://docs.ar.io/en/AR%20Platform/token?platfor%20*%20m=All%20Platforms#get-a-temporary-token).
-     * - For high-security requirements: Use the token generated at your
-     * server. For details, see
-     * [Get a token](https://docs.ar.io/en/AR%20Platform/token?platfor%20*%20m=All%20Platforms#get-a-token).
-     * @param channelId Unique channel name for the ARRTC session in the
-     * string format. The string length must be less than 64 bytes. Supported
-     * character scopes are:
+     * @param token 在服务器端生成的用于鉴权的 Token:
+     * - 安全要求不高：你可以使用控制台生成的临时 Token，详见 获取临时 Token.
+     * - 安全要求高：将值设为你的服务端生成的正式 Token，详见 获取正式 Token.
+     * @param channelId 标识频道的频道名，最大不超过 64 字节。以下为支持的字符集范围 （共 89 个字符）:
      * - The 26 lowercase English letters: a to z.
      * - The 26 uppercase English letters: A to Z.
      * - The 10 numbers: 0 to 9.
@@ -5480,56 +5473,66 @@ public:
      * ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
 
      @return
-     - 0: Success.
+     - 0(ERR_OK): Success.
      - < 0: Failure.
-        - #ERR_INVALID_ARGUMENT (-2)
-        - #ERR_NOT_READY (-3)
-        - #ERR_REFUSED (-5)
+		- -1(ERR_FAILED): 一般性的错误（未明确归类）。
+		- -2(ERR_INALID_ARGUMENT): 参数无效。
+		- -5(ERR_REFUSED): 调用被拒绝。可能因为用户角色不是观众。
+		- -7(ERR_NOT_INITIALIZED): SDK 尚未初始化。
+		- -102(ERR_INVALID_CHANNEL_NAME): 频道名无效。请更换有效的频道名。
+		- -113(ERR_NOT_IN_CHANNEL): 用户不在频道内。
+
      */
     virtual int switchChannel(const char* token, const char* channelId) = 0;
     
-    /** Allows a user to leave a channel, such as hanging up or exiting a call.
+    /** 离开频道，即挂断或退出通话.
 
-     After joining a channel, the user must call the *leaveChannel* method to end the call before joining another channel.
+     当调用 joinChannel 方法后，必须调用 leaveChannel 结束通话，否则无法开始下一次通话。不管当前是否在通话中，都可以调用 leaveChannel，没有副作用。
 
-     This method returns 0 if the user leaves the channel and releases all resources related to the call.
+     该方法会把会话相关的所有资源释放掉。
 
-     This method call is asynchronous, and the user has not left the channel when the method call returns. Once the user leaves the channel, the SDK triggers the \ref IRtcEngineEventHandler::onLeaveChannel "onLeaveChannel" callback.
+    该方法是异步操作，调用返回时并没有真正退出频道。
 
-     A successful \ref ar::rtc::IRtcEngine::leaveChannel "leaveChannel" method call triggers the following callbacks:
-     - The local client: \ref ar::rtc::IRtcEngineEventHandler::onLeaveChannel "onLeaveChannel"
-     - The remote client: \ref ar::rtc::IRtcEngineEventHandler::onUserOffline "onUserOffline" , if the user leaving the channel is in the Communication channel, or is a BROADCASTER in the Live Broadcast profile.
+     在真正退出频道后，SDK 会触发 onLeaveChannel 回调:
+     - 成功调用该方法离开频道后，本地会触发 onLeaveChannel 回调；
+     - 通信场景下的用户和直播场景下的主播离开频道后，远端会触发 onUserOffline 回调。
 
      @note
-     - If you call the \ref IRtcEngine::release "release" method immediately after the *leaveChannel* method, the *leaveChannel* process interrupts, and the \ref IRtcEngineEventHandler::onLeaveChannel "onLeaveChannel" callback is not triggered.
-     - If you call the *leaveChannel* method during a CDN live streaming, the SDK triggers the \ref IRtcEngine::removePublishStreamUrl "removePublishStreamUrl" method.
+     - 如果你调用了 leaveChannel 后立即调用 release，SDK 将无法触发 onLeaveChannel 回调。
+     - 如果你在旁路推流时调用 leaveChannel 方法， SDK 将自动调用 removePublishStreamUrl 方法。
 
      @return
      - 0: Success.
      - < 0: Failure.
+	  - -1(ERR_FAILED): 一般性的错误（未明确归类）。
+	  - -2(ERR_INALID_ARGUMENT): 参数无效。
+	  - -7(ERR_NOT_INITIALIZED): SDK 尚未初始化。
      */
     virtual int leaveChannel() = 0;
     
-    /** Gets a new token when the current token expires after a period of time.
+    /** 更新 Token.
 
-     The `token` expires after a period of time once the token schema is enabled when:
+     该方法用于更新 Token。如果启用了 Token 机制，过一段时间后使用的 Token 会失效。当：
 
-     - The SDK triggers the \ref IRtcEngineEventHandler::onTokenPrivilegeWillExpire "onTokenPrivilegeWillExpire" callback, or
-     - The \ref IRtcEngineEventHandler::onConnectionStateChanged "onConnectionStateChanged" reports CONNECTION_CHANGED_TOKEN_EXPIRED(9).
+     - 发生 onTokenPrivilegeWillExpire 回调时，或发生
+     - onConnectionStateChanged 回调报告 CONNECTION_CHANGED_TOKEN_EXPIRED(9) 时。
 
-     The application should call this method to get the new `token`. Failure to do so will result in the SDK disconnecting from the server.
+     App 应重新获取 Token，然后调用该方法更新 Token，否则 SDK 无法和服务器建立连接。
 
      @param token Pointer to the new token.
      @return
      - 0: Success.
      - < 0: Failure.
+	  - -1(ERR_FAILED): 一般性的错误（未明确归类）。
+	  - -2(ERR_INALID_ARGUMENT): 参数无效。
+	  - -7(ERR_NOT_INITIALIZED): SDK 尚未初始化。
      */
     virtual int renewToken(const char* token) = 0;
 
-    /** Retrieves the pointer to the device manager object.
+    /** 获取设备管理员对象的指针.
 
-     @param iid ID of the interface.
-     @param inter Pointer to the *DeviceManager* object.
+     @param iid 想要获取的接口的ID.
+     @param inter 指向 DeviceManager 对象的指针.
      @return
      - 0: Success.
      - < 0: Failure.
@@ -5664,17 +5667,17 @@ public:
      */
     virtual int startEchoTest() = 0;
 
-    /** Starts an audio call test.
+    /** 开始语音通话回路测试.
 
-    This method starts an audio call test to determine whether the audio devices (for example, headset and speaker) and the network connection are working properly.
-
-    In the audio call test, you record your voice. If the recording plays back within the set time interval, the audio devices and the network connection are working properly.
+    该方法启动语音通话测试，目的是测试系统的音频设备（耳麦、扬声器等）和网络连接是否正常。 
+	
+	在测试过程中，用户先说一段话，声音会在设置的时间间隔（单位为秒）后回放出来。 如果用户能正常听到自己刚才说的话，就表示系统音频设备和网络连接都是正常的。
 
     @note
-    - Call this method before joining a channel.
-    - After calling this method, call the \ref IRtcEngine::stopEchoTest "stopEchoTest" method to end the test. Otherwise, the app cannot run the next echo test, or call the \ref IRtcEngine::joinChannel "joinChannel" method.
-    - In the Live-broadcast profile, only a host can call this method.
-    @param intervalInSeconds The time interval (s) between when you speak and when the recording plays back.
+    - 请在加入频道前调用该方法。
+    - 调用 startEchoTest 后必须调用 stopEchoTest 以结束测试，否则不能进行下一次回声测试，也无法加入频道。
+    - 直播场景下，该方法仅能由用户角色为主播的用户调用。
+    @param intervalInSeconds 设置返回语音通话回路测试结果的时间间隔，取值范围为 [2, 10]，单位为秒，默认为 10 秒。
 
      @return
      - 0: Success.
@@ -5682,7 +5685,7 @@ public:
      */
   virtual int startEchoTest(int intervalInSeconds) = 0;
 
-    /** Stops the audio call test.
+    /** 停止语音通话回路测试。
 
      @return
      - 0: Success.
@@ -7456,7 +7459,7 @@ public:
     virtual int updateScreenCaptureRegion(const Rect *rect) = 0;
 #endif
 
-#if defined(_WIN32)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
     /** Sets a custom video source.
      *
      * During real-time communication, the AR SDK enables the default video input device, that is, the built-in camera to
