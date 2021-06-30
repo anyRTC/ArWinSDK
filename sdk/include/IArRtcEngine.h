@@ -3227,7 +3227,7 @@ public:
 };
 
 
-#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_MAC))
 /** The capture type of the custom video source.
  */
 enum VIDEO_CAPTURE_TYPE {
@@ -5095,12 +5095,12 @@ struct LogConfig
     /** The absolute path of log files.
      *
      * The default file path is:
-     * - Android: `/storage/emulated/0/Android/data/<package name>/files/agorasdk.log`
-     * - iOS: `App Sandbox/Library/caches/agorasdk.log`
+     * - Android: `/storage/emulated/0/Android/data/<package name>/files/ar_sdk.log`
+     * - iOS: `App Sandbox/Library/caches/ar_sdk.log`
      * - macOS:
-     *  - Sandbox enabled: `App Sandbox/Library/Logs/agorasdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/agorasdk.log`.
-     *  - Sandbox disabled: `～/Library/Logs/agorasdk.log`.
-     * - Windows: `C:\Users\<user_name>\AppData\Local\AR\<process_name>\agorasdk.log`
+     *  - Sandbox enabled: `App Sandbox/Library/Logs/ar_sdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/ar_sdk.log`.
+     *  - Sandbox disabled: `～/Library/Logs/ar_sdk.log`.
+     * - Windows: `C:\Users\<user_name>\AppData\Local\AR\<process_name>\ar_sdk.log`
      *
      * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
      */
@@ -5148,10 +5148,10 @@ struct RtcEngineContext
      *
      * @since v3.3.0
      *
-     * By default, the SDK outputs five log files, `agorasdk.log`, `agorasdk_1.log`, `agorasdk_2.log`, `agorasdk_3.log`, `agorasdk_4.log`, each with
-     * a default size of 1024 KB. These log files are encoded in UTF-8. The SDK writes the latest logs in `agorasdk.log`. When `agorasdk.log` is
-     * full, the SDK deletes the log file with the earliest modification time among the other four, renames `agorasdk.log` to the name of the
-     * deleted log file, and creates a new `agorasdk.log` to record latest logs.
+     * By default, the SDK outputs five log files, `ar_sdk.log`, `ar_sdk_1.log`, `ar_sdk_2.log`, `ar_sdk_3.log`, `ar_sdk_4.log`, each with
+     * a default size of 1024 KB. These log files are encoded in UTF-8. The SDK writes the latest logs in `ar_sdk.log`. When `ar_sdk.log` is
+     * full, the SDK deletes the log file with the earliest modification time among the other four, renames `ar_sdk.log` to the name of the
+     * deleted log file, and creates a new `ar_sdk.log` to record latest logs.
      *
      */
     LogConfig logConfig;
@@ -7459,7 +7459,7 @@ public:
     virtual int updateScreenCaptureRegion(const Rect *rect) = 0;
 #endif
 
-#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_MAC))
     /** Sets a custom video source.
      *
      * During real-time communication, the AR SDK enables the default video input device, that is, the built-in camera to
