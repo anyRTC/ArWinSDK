@@ -17,7 +17,7 @@
 
 本开源项目使用 **C++** 语言开发
 
-你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1]()
+你也可以在这里查看入门版的示例项目：[AR4.0-Windows-Tutorial-1to1](https://github.com/anyRTC/ArWinSDK)
 
 AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可以查看对应各平台的示例项目：
 
@@ -47,7 +47,7 @@ AR4.0 视频 SDK 支持 iOS / Android / Windows / macOS 等多个平台，你可
 
 ### 集成 AR4.0 视频 SDK
 
-1. 在 [AR4.0 SDK](https://www.anyrtc.io/blog/download/) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
+1. 在 [AR4.0 SDK](https://docs.anyrtc.io/download) 下载 **视频通话 + 直播 SDK**，解压后将其中的 **sdk** 复制到本项目的 `OpenVideoCall` 文件夹下（并覆盖同名旧目录）。
 
 2. 使用 VC++2013 打开 OpenVideoCall.sln，编译整个解决方案
 
