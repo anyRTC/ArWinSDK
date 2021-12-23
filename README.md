@@ -17,7 +17,7 @@ With this sample app, you can:
 
 This demo is written in **C++**
 
-A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1]()
+A tutorial demo can be found here: [AR4.0-Windows-Tutorial-1to1](https://github.com/anyRTC/ArWinSDK)
 
 AR4.0 Video SDK supports iOS / Android / Windows / macOS etc. You can find demos of these platform here:
 
@@ -49,7 +49,7 @@ To build and run the sample application, get an App ID:
 
 ### Integrate the AR4.0 Video SDK
 
-1. Download the **AR4.0 Video SDK** from [anyRTC.io SDK](https://www.anyrtc.io/blog/download/). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
+1. Download the **AR4.0 Video SDK** from [anyRTC.io SDK](https://docs.anyrtc.io/download). Unzip the downloaded SDK package and copy the **sdk** to the `OpenVideoCall` folder in project（the old one may be over written.
 2. Open OpenVideoCall.sln, build the solution and run.
 
 
