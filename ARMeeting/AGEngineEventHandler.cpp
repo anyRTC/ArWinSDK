@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "AGEngineEventHandler.h"
 #include "AGEventDef.h"
+#include <wchar.h>
 
 #define WM_USER_MSG				(WM_USER+1)
 
@@ -12,6 +13,9 @@ CAGEngineEventHandler::CAGEngineEventHandler(IRtcEngineEventHandler&rEventHandle
 	, m_bVideoEnable(false)
 	, m_bLocalAudioMuted(false)
 	, m_bScreenCapture(false)
+	, m_nVideoWidth(1280)
+	, m_nVideoHeight(720)
+	, m_nVideoFps(30)
 {
 	m_bLocalVideoMuted = false;
 
@@ -50,6 +54,123 @@ CString CAGEngineEventHandler::LoadAppID()
 	strAppID = szAppid;
 
 	return strAppID;
+}
+
+CString CAGEngineEventHandler::LoadSvrIp()
+{
+	TCHAR szFilePath[MAX_PATH];
+	CString strAppID(APP_ID);
+
+	::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
+
+	if (lpLastSlash != NULL)
+	{
+		SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+		_tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
+
+		TCHAR szParam[MAX_PATH] = { 0 };
+		::GetPrivateProfileString(_T("Server"), _T("SvrIp"), NULL, szParam, MAX_PATH, szFilePath);
+		if (_tcslen(szParam) != 0) {
+			return szParam;
+		}
+	}
+	return _T("");
+}
+int CAGEngineEventHandler::LoadSvrPort()
+{
+	TCHAR szFilePath[MAX_PATH];
+	CString strAppID(APP_ID);
+
+	::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
+
+	if (lpLastSlash != NULL)
+	{
+		SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+		_tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
+
+		TCHAR szParam[MAX_PATH] = { 0 };
+		::GetPrivateProfileString(_T("Server"), _T("SvrPort"), NULL, szParam, MAX_PATH, szFilePath);
+		if (_tcslen(szParam) != 0) {
+			int ret = _wtoi(szParam);
+
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+int CAGEngineEventHandler::LoadVidWidth()
+{
+	TCHAR szFilePath[MAX_PATH];
+	CString strAppID(APP_ID);
+
+	::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
+
+	if (lpLastSlash != NULL)
+	{
+		SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+		_tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
+
+		TCHAR szParam[MAX_PATH] = { 0 };
+		::GetPrivateProfileString(_T("Video"), _T("VidWidth"), NULL, szParam, MAX_PATH, szFilePath);
+		if (_tcslen(szParam) != 0) {
+			int ret = _wtoi(szParam);
+
+			return ret;
+		}
+	}
+
+	return 1280;
+}
+int CAGEngineEventHandler::LoadVidHeight()
+{
+	TCHAR szFilePath[MAX_PATH];
+	CString strAppID(APP_ID);
+
+	::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
+
+	if (lpLastSlash != NULL)
+	{
+		SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+		_tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
+
+		TCHAR szParam[MAX_PATH] = { 0 };
+		::GetPrivateProfileString(_T("Video"), _T("VidHeight"), NULL, szParam, MAX_PATH, szFilePath);
+		if (_tcslen(szParam) != 0) {
+			int ret = _wtoi(szParam);
+
+			return ret;
+		}
+	}
+	return 720;
+}
+int CAGEngineEventHandler::LoadVidFps() 
+{
+	TCHAR szFilePath[MAX_PATH];
+	CString strAppID(APP_ID);
+
+	::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
+
+	if (lpLastSlash != NULL)
+	{
+		SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+		_tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
+
+		TCHAR szParam[MAX_PATH] = { 0 };
+		::GetPrivateProfileString(_T("Video"), _T("VidFps"), NULL, szParam, MAX_PATH, szFilePath);
+		if (_tcslen(szParam) != 0) {
+			int ret = _wtoi(szParam);
+
+			return ret;
+		}
+	}
+	return 30;
 }
 
 
@@ -251,6 +372,9 @@ int CAGEngineEventHandler::Start()
 	RtcEngineContext ctx;
 	ctx.eventHandler = this;
 	CString strAppID = CAGEngineEventHandler::LoadAppID();
+	m_nVideoWidth = CAGEngineEventHandler::LoadVidWidth();
+	m_nVideoHeight = CAGEngineEventHandler::LoadVidHeight();
+	m_nVideoFps = CAGEngineEventHandler::LoadVidFps();
 
 	if (_tcslen(strAppID) == 0) {
 		MessageBox(_T("Please define your own APP_ID in source code"), _T("information"), MB_OK | MB_ICONINFORMATION);
@@ -269,6 +393,24 @@ int CAGEngineEventHandler::Start()
 	m_lpArEngine->initialize(ctx);
 	m_lpArEngine->setChannelProfile(AR::CHANNEL_PROFILE_LIVE_BROADCASTING);
 	m_lpArEngine->setClientRole(AR::CLIENT_ROLE_AUDIENCE);
+	m_lpArEngine->setParameters("{\"Cmd\":\"SetAudioAiNoise\", \"Enable\": 1}");
+
+
+	CString csSvrIp = CAGEngineEventHandler::LoadSvrIp();
+	int nSvrPort = CAGEngineEventHandler::LoadSvrPort();
+	if (csSvrIp.GetLength() > 0 && nSvrPort > 0) {
+		char szSvrIp[128];
+#ifdef UNICODE
+		::WideCharToMultiByte(CP_ACP, 0, csSvrIp, -1, szSvrIp, 128, NULL, NULL);
+#else
+		sprintf(szSvrIp, "%s", csSvrIp);
+#endif
+		char strCmd[1024];
+		sprintf(strCmd, "{\"Cmd\":\"ConfPriCloudAddr\", \"ServerAdd\": \"%s\", \"Port\": %d}", szSvrIp, nSvrPort);
+		m_lpArEngine->setParameters(strCmd);
+		//m_lpArEngine->setParameters("{\"Cmd\":\"ConfPriCloudAddr\", \"ServerAdd\": \"192.168.199.245\", \"Port\": 6080}");
+	}
+
 	EnableVideo();
 
 	return 0;
@@ -700,11 +842,11 @@ bool CAGEngineEventHandler::LocalVideoPreview(HWND hVideoWnd, bool bPreviewOn)
 	}
 	else {
 		AR::VideoEncoderConfiguration vidEncoderConf;
-		vidEncoderConf.dimensions.width = 240;
-		vidEncoderConf.dimensions.height = 180;
-		vidEncoderConf.bitrate = 280;
-		vidEncoderConf.minBitrate = 128;
-		vidEncoderConf.frameRate = AR::FRAME_RATE_FPS_24;
+		vidEncoderConf.dimensions.width = m_nVideoWidth;
+		vidEncoderConf.dimensions.height = m_nVideoHeight;
+		vidEncoderConf.bitrate = 2048;
+		vidEncoderConf.minBitrate = vidEncoderConf.bitrate / 5;
+		vidEncoderConf.frameRate = AR::FRAME_RATE_FPS_30;
 		vidEncoderConf.minFrameRate = 10;
 		nRet = m_lpArEngine->setVideoEncoderConfiguration(vidEncoderConf);
 

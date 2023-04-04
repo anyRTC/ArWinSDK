@@ -13,8 +13,10 @@
 #include "ArBase.h"
 #include "IArService.h"
 
-#if defined(_WIN32)
 #include "IArMediaEngine.h"
+
+#if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#include <CoreVideo/CVPixelBuffer.h>
 #endif
 
 #ifndef AR
@@ -109,6 +111,9 @@ enum MEDIA_ENGINE_EVENT_CODE_TYPE
     /** 24: For internal use only.
      */
     MEDIA_ENGINE_ROLE_GAME_PEER = 24,
+  /** 30: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_AIRPLAY_CONNECTED = 30,
     // iOS adm sample rate changed
     /** 110: For internal use only.
      */
@@ -122,35 +127,44 @@ enum MEDIA_ENGINE_EVENT_CODE_TYPE
     /** 113: For internal use only.
      */
     MEDIA_ENGINE_AUDIO_ADM_USING_NORM_PARAMS = 113,
-    // audio mix state
-    /** 710: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_EVENT_MIXING_PLAY = 710,
-    /** 711: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_EVENT_MIXING_PAUSED = 711,
-    /** 712: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_EVENT_MIXING_RESTART         = 712,
-    /** 713: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_EVENT_MIXING_STOPPED = 713,
-    /** 714: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_EVENT_MIXING_ERROR = 714,
-    //Mixing error codes
-    /** 701: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_ERROR_MIXING_OPEN = 701,
-    /** 702: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_ERROR_MIXING_TOO_FREQUENT = 702,
-    /** 703: The audio mixing file playback is interrupted. For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_ERROR_MIXING_INTERRUPTED_EOF = 703,
-    /** 0: For internal use only.
-     */
-    MEDIA_ENGINE_AUDIO_ERROR_MIXING_NO_ERROR = 0,
+  /** 114: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_ADM_ROUTING_UPDATE = 114,
+  // audio mix event
+  /** 720: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_STARTED_BY_USER = 720,
+  /** 721: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_ONE_LOOP_COMPLETED = 721,
+  /** 722: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_START_NEW_LOOP = 722,
+  /** 723: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_ALL_LOOPS_COMPLETED = 723,
+  /** 724: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_STOPPED_BY_USER = 724,
+  /** 725: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_PAUSED_BY_USER = 725,
+  /** 726: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_EVENT_MIXING_RESUMED_BY_USER = 726,
+  // Mixing error codes
+  /** 701: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_ERROR_MIXING_OPEN = 701,
+  /** 702: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_ERROR_MIXING_TOO_FREQUENT = 702,
+  /** 703: The audio mixing file playback is interrupted. For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_ERROR_MIXING_INTERRUPTED_EOF = 703,
+  /** 0: For internal use only.
+   */
+  MEDIA_ENGINE_AUDIO_ERROR_MIXING_NO_ERROR = 0,
 };
 
 /** The states of the local user's audio mixing file.
@@ -187,22 +201,78 @@ enum AUDIO_MIXING_ERROR_TYPE{
     AUDIO_MIXING_ERROR_OK = 0,
 };
 
+/** The reason for the change of the music file playback state.
+ *
+ * @since v3.4.0
+ *
+ * Reports in the \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" callback.
+ */
+enum AUDIO_MIXING_REASON_TYPE {
+  /** 701: The SDK cannot open the music file. Possible causes include the local
+   * music file does not exist, the SDK does not support the file format, or the
+   * SDK cannot access the music file URL.
+   */
+  AUDIO_MIXING_REASON_CAN_NOT_OPEN = 701,
+  /** 702: The SDK opens the music file too frequently. If you need to call
+   * \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" multiple times, ensure
+   * that the call interval is longer than 500 ms.
+   */
+  AUDIO_MIXING_REASON_TOO_FREQUENT_CALL = 702,
+  /** 703: The music file playback is interrupted.
+   */
+  AUDIO_MIXING_REASON_INTERRUPTED_EOF = 703,
+  /** 720: Successfully calls \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing"
+   * to play a music file.
+   */
+  AUDIO_MIXING_REASON_STARTED_BY_USER = 720,
+  /** 721: The music file completes a loop playback.
+   */
+  AUDIO_MIXING_REASON_ONE_LOOP_COMPLETED = 721,
+  /** 722: The music file starts a new loop playback.
+   */
+  AUDIO_MIXING_REASON_START_NEW_LOOP = 722,
+  /** 723: The music file completes all loop playback.
+   */
+  AUDIO_MIXING_REASON_ALL_LOOPS_COMPLETED = 723,
+  /** 724: Successfully calls \ref IRtcEngine::stopAudioMixing "stopAudioMixing"
+   * to stop playing the music file.
+   */
+  AUDIO_MIXING_REASON_STOPPED_BY_USER = 724,
+  /** 725: Successfully calls \ref IRtcEngine::pauseAudioMixing "pauseAudioMixing"
+   * to pause playing the music file.
+   */
+  AUDIO_MIXING_REASON_PAUSED_BY_USER = 725,
+  /** 726: Successfully calls \ref IRtcEngine::resumeAudioMixing "resumeAudioMixing"
+   * to resume playing the music file.
+   */
+  AUDIO_MIXING_REASON_RESUMED_BY_USER = 726,
+};
+
 /** Media device states.
  */
-enum MEDIA_DEVICE_STATE_TYPE
-{
-  /** 1: The device is active.
-  */
-    MEDIA_DEVICE_STATE_ACTIVE = 1,
-    /** 2: The device is disabled.
-    */
-    MEDIA_DEVICE_STATE_DISABLED = 2,
-    /** 4: The device is not present.
-    */
-    MEDIA_DEVICE_STATE_NOT_PRESENT = 4,
-    /** 8: The device is unplugged.
-    */
-    MEDIA_DEVICE_STATE_UNPLUGGED = 8
+enum MEDIA_DEVICE_STATE_TYPE {
+  /** 0: The device is ready for use.
+   *
+   * @since v3.4.5
+   */
+  MEDIA_DEVICE_STATE_IDLE = 0,
+  /** 1: The device is in use.
+   *
+   * @since v3.4.5
+   */
+  MEDIA_DEVICE_STATE_ACTIVE = 1,
+  /** 2: The device is disabled.
+   */
+  MEDIA_DEVICE_STATE_DISABLED = 2,
+  /** 4: The device is not present.
+   */
+  MEDIA_DEVICE_STATE_NOT_PRESENT = 4,
+  /** 8: The device is unplugged.
+   */
+  MEDIA_DEVICE_STATE_UNPLUGGED = 8,
+  /** 16: The device is not recommended.
+   */
+  MEDIA_DEVICE_STATE_UNRECOMMENDED = 16,
 };
 
 /** Media device types.
@@ -271,8 +341,24 @@ enum LOCAL_VIDEO_STREAM_ERROR {
 	 * @since v3.3.0
 	 */
 	LOCAL_VIDEO_STREAM_ERROR_CAPTURE_MULTIPLE_FOREGROUND_APPS = 7,
-    /** 11: The shared window is minimized when you call \ref IRtcEngine::startScreenCaptureByWindowId "startScreenCaptureByWindowId" to share a window.
-     */
+  /**
+   * 8: The SDK cannot find the local video capture device.
+   *
+   * @since v3.4.0
+   */
+  LOCAL_VIDEO_STREAM_ERROR_DEVICE_NOT_FOUND = 8,
+  /**
+   * 10: (macOS and Windows only) The SDK cannot find the video device in the video device list. Check whether the ID
+   * of the video device is valid.
+   *
+   * @since v3.5.2
+   */
+  LOCAL_VIDEO_STREAM_ERROR_DEVICE_INVALID_ID = 10,
+  /**
+   * 11: The shared window is minimized when you call
+   * \ref IRtcEngine::startScreenCaptureByWindowId "startScreenCaptureByWindowId"
+   * to share a window.
+   */
     LOCAL_VIDEO_STREAM_ERROR_SCREEN_CAPTURE_WINDOW_MINIMIZED = 11,
     /** 12: The error code indicates that a window shared by the window ID has been closed, or a full-screen window
      * shared by the window ID has exited full-screen mode.
@@ -287,6 +373,19 @@ enum LOCAL_VIDEO_STREAM_ERROR {
      * the web video or document. After the user exits full-screen mode, the SDK reports this error code.
      */
     LOCAL_VIDEO_STREAM_ERROR_SCREEN_CAPTURE_WINDOW_CLOSED = 12,
+  /**
+   * 13: (Windows only) The window being shared is overlapped by another window, so the overlapped area is blacked out by
+   * the SDK during window sharing.
+   *
+   * @since v3.5.2
+   */
+  LOCAL_VIDEO_STREAM_ERROR_SCREEN_CAPTURE_WINDOW_OCCLUDED = 13,
+  /**
+   * 20: (Windows only) The SDK does not support sharing this type of window.
+   *
+   * @since v3.5.2
+   */
+  LOCAL_VIDEO_STREAM_ERROR_SCREEN_CAPTURE_WINDOW_NOT_SUPPORTED = 20,
 };
 
 /** Local audio state types.
@@ -329,7 +428,31 @@ enum LOCAL_AUDIO_STREAM_ERROR
     LOCAL_AUDIO_STREAM_ERROR_RECORD_FAILURE = 4,
     /** 5: The local audio encoding fails.
      */
-    LOCAL_AUDIO_STREAM_ERROR_ENCODE_FAILURE = 5
+  LOCAL_AUDIO_STREAM_ERROR_ENCODE_FAILURE = 5,
+  /** 6: The SDK cannot find the local audio recording device.
+   *
+   * @since v3.4.0
+   */
+  LOCAL_AUDIO_STREAM_ERROR_NO_RECORDING_DEVICE = 6,
+  /** 7: The SDK cannot find the local audio playback device.
+   *
+   * @since v3.4.0
+   */
+  LOCAL_AUDIO_STREAM_ERROR_NO_PLAYOUT_DEVICE = 7,
+  /**
+   * 8: The local audio capturing is interrupted by the system call.
+   */
+  LOCAL_AUDIO_STREAM_ERROR_INTERRUPTED = 8,
+  /** 9: An invalid audio capture device ID.
+   *
+   * @since v3.5.1
+   */
+  LOCAL_AUDIO_STREAM_ERROR_RECORD_INVALID_ID = 9,
+  /** 10: An invalid audio playback device ID.
+   *
+   * @since v3.5.1
+   */
+  LOCAL_AUDIO_STREAM_ERROR_PLAYOUT_INVALID_ID = 10,
 };
 
 /** Audio recording qualities.
@@ -691,6 +814,36 @@ enum SUPER_RESOLUTION_STATE_REASON
      */
     SR_STATE_REASON_DEVICE_NOT_SUPPORTED = 3,
 };
+
+/**
+ * The reason why the virtual background is not successfully enabled or the message that confirms success.
+ *
+ * @since v3.4.5
+ */
+enum VIRTUAL_BACKGROUND_SOURCE_STATE_REASON {
+  /**
+   * 0: The virtual background is successfully enabled.
+   */
+  VIRTUAL_BACKGROUND_SOURCE_STATE_REASON_SUCCESS = 0,
+  /**
+   * 1: The custom background image does not exist. Please check the value of `source` in VirtualBackgroundSource.
+   */
+  VIRTUAL_BACKGROUND_SOURCE_STATE_REASON_IMAGE_NOT_EXIST = 1,
+  /**
+   * 2: The color format of the custom background image is invalid. Please check the value of `color` in VirtualBackgroundSource.
+   */
+  VIRTUAL_BACKGROUND_SOURCE_STATE_REASON_COLOR_FORMAT_NOT_SUPPORTED = 2,
+  /**
+   * 3: The device does not support using the virtual background.
+   */
+  VIRTUAL_BACKGROUND_SOURCE_STATE_REASON_DEVICE_NOT_SUPPORTED = 3,
+};
+/// @cond
+enum CONTENT_INSPECT_RESULT {
+  CONTENT_INSPECT_NEUTRAL = 1,
+  CONTENT_INSPECT_SEXY = 2,
+  CONTENT_INSPECT_PORN = 3,
+};
 /// @endcond
 
 /** Reasons for a user being offline. */
@@ -726,73 +879,124 @@ enum RTMP_STREAM_PUBLISH_STATE
   /** The RTMP streaming fails. See the errCode parameter for the detailed error information. You can also call the \ref IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" method to publish the RTMP streaming again.
    */
   RTMP_STREAM_PUBLISH_STATE_FAILURE = 4,
+  /** The SDK is disconnecting from the AR streaming server and CDN.
+   * When you call remove or stop to stop the streaming normally, the SDK reports the streaming state as `DISCONNECTING`, `IDLE` in sequence.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAM_PUBLISH_STATE_DISCONNECTING = 5,
 };
 
 /**
- Error codes of the RTMP streaming.
+ Error codes of the RTMP or RTMPS streaming.
  */
-enum RTMP_STREAM_PUBLISH_ERROR
-{
-  /** The RTMP streaming publishes successfully. */
+enum RTMP_STREAM_PUBLISH_ERROR_TYPE {
+  /** 0: The RTMP or RTMPS streaming publishes successfully. */
   RTMP_STREAM_PUBLISH_ERROR_OK = 0,
-  /** Invalid argument used. If, for example, you do not call the \ref IRtcEngine::setLiveTranscoding "setLiveTranscoding" method to configure the LiveTranscoding parameters before calling the addPublishStreamUrl method, the SDK returns this error. Check whether you set the parameters in the *setLiveTranscoding* method properly. */
+  /** 1: Invalid argument used. If, for example, you do not call the \ref IRtcEngine::setLiveTranscoding "setLiveTranscoding" method to configure the LiveTranscoding parameters before calling the addPublishStreamUrl method, the SDK returns this error. Check whether you set the parameters in the *setLiveTranscoding* method properly. */
   RTMP_STREAM_PUBLISH_ERROR_INVALID_ARGUMENT = 1,
-  /** The RTMP streaming is encrypted and cannot be published. */
+  /** 2: The RTMP or RTMPS streaming is encrypted and cannot be published. */
   RTMP_STREAM_PUBLISH_ERROR_ENCRYPTED_STREAM_NOT_ALLOWED = 2,
-  /** Timeout for the RTMP streaming. Call the \ref IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" method to publish the streaming again. */
+  /** 3: Timeout for the RTMP or RTMPS streaming. Call the \ref IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" method to publish the streaming again. */
   RTMP_STREAM_PUBLISH_ERROR_CONNECTION_TIMEOUT = 3,
-  /** An error occurs in AR's streaming server. Call the addPublishStreamUrl method to publish the streaming again. */
+  /** 4: An error occurs in AR's streaming server. Call the `addPublishStreamUrl` method to publish the streaming again. */
   RTMP_STREAM_PUBLISH_ERROR_INTERNAL_SERVER_ERROR = 4,
-  /** An error occurs in the RTMP server. */
+  /** 5: An error occurs in the CDN server. */
   RTMP_STREAM_PUBLISH_ERROR_RTMP_SERVER_ERROR = 5,
-  /** The RTMP streaming publishes too frequently. */
+  /** 6; The RTMP or RTMPS streaming publishes too frequently. */
   RTMP_STREAM_PUBLISH_ERROR_TOO_OFTEN = 6,
-  /** The host publishes more than 10 URLs. Delete the unnecessary URLs before adding new ones. */
+  /** 7: The host publishes more than 10 URLs. Delete the unnecessary URLs before adding new ones. */
   RTMP_STREAM_PUBLISH_ERROR_REACH_LIMIT = 7,
-  /** The host manipulates other hosts' URLs. Check your app logic. */
+  /** 8: The host manipulates other hosts' URLs. Check your app logic. */
   RTMP_STREAM_PUBLISH_ERROR_NOT_AUTHORIZED = 8,
-  /** AR's server fails to find the RTMP streaming. */
+  /** 9: AR's server fails to find the RTMP or RTMPS streaming. */
   RTMP_STREAM_PUBLISH_ERROR_STREAM_NOT_FOUND = 9,
-  /** The format of the RTMP streaming URL is not supported. Check whether the URL format is correct. */
+  /** 10: The format of the RTMP or RTMPS streaming URL is not supported. Check whether the URL format is correct. */
   RTMP_STREAM_PUBLISH_ERROR_FORMAT_NOT_SUPPORTED = 10,
-  /** 推流中的背景图片或者水印地址无法拉取 **/
-  RTMP_STREAMING_ERROR_FAILED_LOAD_IMAGE = 11,
-
+  /**
+   * 11: The user role is not host, so the user cannot use the CDN live streaming function.
+   * Check your application code logic.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAM_PUBLISH_ERROR_NOT_BROADCASTER = 11,  // Note: match to ERR_PUBLISH_STREAM_NOT_BROADCASTER in AgoraBase.h
+  /**
+   * 13: The `updateRtmpTranscoding` or `setLiveTranscoding` method is called to update the transcoding configuration in a scenario where there is streaming without transcoding.
+   * Check your application code logic.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAM_PUBLISH_ERROR_TRANSCODING_NO_MIX_STREAM = 13,  // Note: match to ERR_PUBLISH_STREAM_TRANSCODING_NO_MIX_STREAM in AgoraBase.h
+  /**
+   * 14: Errors occurred in the host's network.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAM_PUBLISH_ERROR_NET_DOWN = 14,  // Note: match to ERR_NET_DOWN in AgoraBase.h
+  /**
+   * 15: Your App ID does not have permission to use the CDN live streaming function.
+   * Refer to [Prerequisites](https://docs.agora.io/en/Interactive%20Broadcast/cdn_streaming_windows?platform=Windows#prerequisites) to
+   * enable the CDN live streaming permission.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAM_PUBLISH_ERROR_INVALID_APPID = 15,  // Note: match to ERR_PUBLISH_STREAM_APPID_INVALID in AgoraBase.h
+  /**
+   * 100: The streaming has been stopped normally. After you call
+   * \ref IRtcEngine::removePublishStreamUrl "removePublishStreamUrl"
+   * to stop streaming, the SDK returns this value.
+   *
+   * @since v3.4.5
+   */
+  RTMP_STREAM_UNPUBLISH_ERROR_OK = 100,
 };
 
-/** Events during the RTMP streaming. */
-enum RTMP_STREAMING_EVENT
-{
-  /** An error occurs when you add a background image or a watermark image to the RTMP stream.
+/** Events during the RTMP or RTMPS streaming. */
+enum RTMP_STREAMING_EVENT {
+  /** 1: An error occurs when you add a background image or a watermark image to the RTMP or RTMPS stream.
    */
   RTMP_STREAMING_EVENT_FAILED_LOAD_IMAGE = 1,
+  /** 2: The streaming URL is already being used for CDN live streaming. If you want to start new streaming, use a new streaming URL.
+   *
+   * @since v3.4.5
+   */
+  RTMP_STREAMING_EVENT_URL_ALREADY_IN_USE = 2,
+  /** 3: The feature is not supported.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAMING_EVENT_ADVANCED_FEATURE_NOT_SUPPORT = 3,
+  /** 4: Reserved.
+   *
+   * @since v3.6.0
+   */
+  RTMP_STREAMING_EVENT_REQUEST_TOO_OFTEN = 4,
 };
 
-/** States of importing an external video stream in the live interactive streaming. */
-enum INJECT_STREAM_STATUS
-{
-    /** 0: The external video stream imported successfully. */
-    INJECT_STREAM_STATUS_START_SUCCESS = 0,
-    /** 1: The external video stream already exists. */
-    INJECT_STREAM_STATUS_START_ALREADY_EXISTS = 1,
-    /** 2: The external video stream to be imported is unauthorized. */
-    INJECT_STREAM_STATUS_START_UNAUTHORIZED = 2,
-    /** 3: Import external video stream timeout. */
-    INJECT_STREAM_STATUS_START_TIMEDOUT = 3,
-    /** 4: Import external video stream failed. */
-    INJECT_STREAM_STATUS_START_FAILED = 4,
-    /** 5: The external video stream stopped importing successfully. */
-    INJECT_STREAM_STATUS_STOP_SUCCESS = 5,
-    /** 6: No external video stream is found. */
-    INJECT_STREAM_STATUS_STOP_NOT_FOUND = 6,
-    /** 7: The external video stream to be stopped importing is unauthorized. */
-    INJECT_STREAM_STATUS_STOP_UNAUTHORIZED = 7,
-    /** 8: Stop importing external video stream timeout. */
-    INJECT_STREAM_STATUS_STOP_TIMEDOUT = 8,
-    /** 9: Stop importing external video stream failed. */
-    INJECT_STREAM_STATUS_STOP_FAILED = 9,
-    /** 10: The external video stream is corrupted. */
-    INJECT_STREAM_STATUS_BROKEN = 10,
+/** States of importing an external video stream in the interactive live streaming. */
+enum INJECT_STREAM_STATUS {
+  /** 0: The external video stream imported successfully. */
+  INJECT_STREAM_STATUS_START_SUCCESS = 0,
+  /** 1: The external video stream already exists. */
+  INJECT_STREAM_STATUS_START_ALREADY_EXISTS = 1,
+  /** 2: The external video stream to be imported is unauthorized. */
+  INJECT_STREAM_STATUS_START_UNAUTHORIZED = 2,
+  /** 3: Import external video stream timeout. */
+  INJECT_STREAM_STATUS_START_TIMEDOUT = 3,
+  /** 4: Import external video stream failed. */
+  INJECT_STREAM_STATUS_START_FAILED = 4,
+  /** 5: The external video stream stopped importing successfully. */
+  INJECT_STREAM_STATUS_STOP_SUCCESS = 5,
+  /** 6: No external video stream is found. */
+  INJECT_STREAM_STATUS_STOP_NOT_FOUND = 6,
+  /** 7: The external video stream to be stopped importing is unauthorized. */
+  INJECT_STREAM_STATUS_STOP_UNAUTHORIZED = 7,
+  /** 8: Stop importing external video stream timeout. */
+  INJECT_STREAM_STATUS_STOP_TIMEDOUT = 8,
+  /** 9: Stop importing external video stream failed. */
+  INJECT_STREAM_STATUS_STOP_FAILED = 9,
+  /** 10: The external video stream is corrupted. */
+  INJECT_STREAM_STATUS_BROKEN = 10,
 };
 /** Remote video stream types. */
 enum REMOTE_VIDEO_STREAM_TYPE
@@ -801,6 +1005,25 @@ enum REMOTE_VIDEO_STREAM_TYPE
     REMOTE_VIDEO_STREAM_HIGH = 0,
       /** 1: Low-stream video. */
     REMOTE_VIDEO_STREAM_LOW = 1,
+};
+/** The brightness level of the video image captured by the local camera.
+ *
+ * @since v3.3.0
+ */
+enum CAPTURE_BRIGHTNESS_LEVEL_TYPE {
+  /** -1: The SDK does not detect the brightness level of the video image.
+   * Wait a few seconds to get the brightness level from `CAPTURE_BRIGHTNESS_LEVEL_TYPE` in the next callback.
+   */
+  CAPTURE_BRIGHTNESS_LEVEL_INVALID = -1,
+  /** 0: The brightness level of the video image is normal.
+   */
+  CAPTURE_BRIGHTNESS_LEVEL_NORMAL = 0,
+  /** 1: The brightness level of the video image is too bright.
+   */
+  CAPTURE_BRIGHTNESS_LEVEL_BRIGHT = 1,
+  /** 2: The brightness level of the video image is too dark.
+   */
+  CAPTURE_BRIGHTNESS_LEVEL_DARK = 2,
 };
 
 /** Use modes of the \ref media::IAudioFrameObserver::onRecordAudioFrame "onRecordAudioFrame" callback. */
@@ -835,18 +1058,43 @@ enum VIDEO_CODEC_PROFILE_TYPE
     VIDEO_CODEC_PROFILE_HIGH = 100,
 };
 
-/** Video codec types */
+/**
+ * Video codec types.
+ */
 enum VIDEO_CODEC_TYPE {
-    /** Standard VP8 */
-    VIDEO_CODEC_VP8 = 1,
-    /** Standard H264 */
-    VIDEO_CODEC_H264 = 2,
-    /** Enhanced VP8 */
-    VIDEO_CODEC_EVP = 3,
-    /** Enhanced H264 */
-    VIDEO_CODEC_E264 = 4,
-	/** Standard Jpeg*/
-	VIDEO_CODEC_MJPG = 5,
+	VIDEO_CODEC_NONE = 0,
+	/**
+	 * 1: VP8.
+	 */
+	VIDEO_CODEC_VP8 = 1,
+	/**
+	 * 2: H.264.
+	 */
+	VIDEO_CODEC_H264 = 2,
+	/**
+	 * 3: H.265.
+	 */
+	VIDEO_CODEC_H265 = 3,
+	/**
+	 * 6: Generic.
+	 */
+	VIDEO_CODEC_GENERIC = 6,
+	/**
+	 * 7: Generic H264.
+	 */
+	VIDEO_CODEC_GENERIC_H264 = 7,
+	/**
+	  * 12: AV1.
+	  */
+	VIDEO_CODEC_AV1 = 12,
+	/**
+	 * 5: VP9.
+	 */
+	VIDEO_CODEC_VP9 = 13,
+	/**
+	 * 20: JPEG.
+	 */
+	VIDEO_CODEC_GENERIC_JPEG = 20,
 };
 
 /**
@@ -1110,6 +1358,17 @@ enum VOICE_BEAUTIFIER_PRESET
      * @note AR recommends using this enumerator to process a female-sounding voice; otherwise, you may experience vocal distortion.
      */
     CHAT_BEAUTIFIER_VITALITY = 0x01010300,
+  /**
+   * @since v3.3.0
+   *
+   * Singing beautifier effect.
+   * - If you call \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset" (SINGING_BEAUTIFIER), you can beautify a male-sounding voice and add a reverberation
+   * effect that sounds like singing in a small room. AR recommends not using \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset" (SINGING_BEAUTIFIER)
+   * to process a female-sounding voice; otherwise, you may experience vocal distortion.
+   * - If you call \ref IRtcEngine::setVoiceBeautifierParameters "setVoiceBeautifierParameters"(SINGING_BEAUTIFIER, param1, param2), you can beautify a male- or
+   * female-sounding voice and add a reverberation effect.
+   */
+  SINGING_BEAUTIFIER = 0x01020100,
     /** A more vigorous voice.
      */
     TIMBRE_TRANSFORMATION_VIGOROUS = 0x01030100,
@@ -1283,13 +1542,42 @@ enum AUDIO_EFFECT_PRESET
      */
     PITCH_CORRECTION = 0x02040100
 };
+/** The options for SDK preset voice conversion effects.
+ *
+ * @since v3.3.1
+ */
+enum VOICE_CONVERSION_PRESET {
+  /** Turn off voice conversion effects and use the original voice.
+   */
+  VOICE_CONVERSION_OFF = 0x00000000,
+  /** A gender-neutral voice. To avoid audio distortion, ensure that you use
+   * this enumerator to process a female-sounding voice.
+   */
+  VOICE_CHANGER_NEUTRAL = 0x03010100,
+  /** A sweet voice. To avoid audio distortion, ensure that you use this
+   * enumerator to process a female-sounding voice.
+   */
+  VOICE_CHANGER_SWEET = 0x03010200,
+  /** A steady voice. To avoid audio distortion, ensure that you use this
+   * enumerator to process a male-sounding voice.
+   */
+  VOICE_CHANGER_SOLID = 0x03010300,
+  /** A deep voice. To avoid audio distortion, ensure that you use this
+   * enumerator to process a male-sounding voice.
+   */
+  VOICE_CHANGER_BASS = 0x03010400
+};
 /** Audio codec profile types. The default value is LC_ACC. */
-enum AUDIO_CODEC_PROFILE_TYPE
-{
-    /** 0: LC-AAC, which is the low-complexity audio codec type. */
-    AUDIO_CODEC_PROFILE_LC_AAC = 0,
-    /** 1: HE-AAC, which is the high-efficiency audio codec type. */
-    AUDIO_CODEC_PROFILE_HE_AAC = 1,
+enum AUDIO_CODEC_PROFILE_TYPE {
+  /** 0: (Default) LC-AAC */
+  AUDIO_CODEC_PROFILE_LC_AAC = 0,
+  /** 1: HE-AAC */
+  AUDIO_CODEC_PROFILE_HE_AAC = 1,
+  /** 2: HE-AAC v2
+   *
+   * @since v3.6.0
+   */
+  AUDIO_CODEC_PROFILE_HE_AAC_V2 = 2,
 };
 
 /** Remote audio states.
@@ -1703,7 +1991,32 @@ enum NETWORK_TYPE
   NETWORK_TYPE_MOBILE_3G = 4,
   /** 5: The network type is mobile 4G. */
   NETWORK_TYPE_MOBILE_4G = 5,
+  /** 6: The network type is mobile 5G.
+   *
+   * @since v3.5.1
+   */
+  NETWORK_TYPE_MOBILE_5G = 6,
 };
+/// @cond
+/**
+ * The reason for the upload failure.
+ *
+ * @since v3.3.0
+ */
+enum UPLOAD_ERROR_REASON {
+  /** 0: The log file is successfully uploaded.
+   */
+  UPLOAD_SUCCESS = 0,
+  /**
+   * 1: Network error. Check the network connection and call \ref IRtcEngine::uploadLogFile "uploadLogFile" again to upload the log file.
+   */
+  UPLOAD_NET_ERROR = 1,
+  /**
+   * 2: An error occurs in the AR server. Try uploading the log files later.
+   */
+  UPLOAD_SERVER_ERROR = 2,
+};
+/// @endcond
 
 /** States of the last-mile network probe test. */
 enum LASTMILE_PROBE_RESULT_STATE {
@@ -1751,6 +2064,35 @@ enum AUDIO_ROUTE_TYPE {
     AUDIO_ROUTE_AIRPLAY = 9,
 };
 
+/** The cloud proxy type.
+ *
+ * @since v3.3.0
+ */
+enum CLOUD_PROXY_TYPE {
+  /** 0: Do not use the cloud proxy.
+   */
+  NONE_PROXY = 0,
+  /** 1: The cloud proxy for the UDP protocol.
+   */
+  UDP_PROXY = 1,
+  /// @cond
+  /** 2: The cloud proxy for the TCP (encrypted) protocol.
+   */
+  TCP_PROXY = 2,
+  /// @endcond
+};
+/// @cond
+/** The local  proxy mode type. */
+enum LOCAL_PROXY_MODE {
+  /** 0: Connect local proxy with high priority, if not connected to local proxy, fallback to sdrtn.
+   */
+  kConnectivityFirst = 0,
+  /** 1: Only connect local proxy
+   */
+  kLocalOnly = 1,
+};
+/// @endcond
+
 #if (defined(__APPLE__) && TARGET_OS_IOS)
 /** Audio session restriction. */
 enum AUDIO_SESSION_OPERATION_RESTRICTION {
@@ -1775,6 +2117,23 @@ enum CAMERA_DIRECTION {
     CAMERA_FRONT = 1,
 };
 #endif
+
+/**
+ * Recording content, which is set
+ * in \ref IRtcEngine::startAudioRecording(const AudioRecordingConfiguration&) "startAudioRecording".
+ */
+enum AUDIO_RECORDING_POSITION {
+  /** 0: (Default) Records the mixed audio of the local user and all remote
+   * users.
+   */
+  AUDIO_RECORDING_POSITION_MIXED_RECORDING_AND_PLAYBACK = 0,
+  /** 1: Records the audio of the local user only.
+   */
+  AUDIO_RECORDING_POSITION_RECORDING = 1,
+  /** 2: Records the audio of all remote users only.
+   */
+  AUDIO_RECORDING_POSITION_MIXED_PLAYBACK = 2,
+};
 
 /** The uplink or downlink last-mile network probe test result. */
 struct LastmileProbeOneWayResult {
@@ -1840,7 +2199,37 @@ struct AudioVolumeInfo
      */
     const char * channelId;
 };
-/// @cond
+
+/**
+ * The information of an audio file. This struct is reported
+ * in \ref IRtcEngineEventHandler::onRequestAudioFileInfo "onRequestAudioFileInfo".
+ *
+ * @since v3.5.1
+ */
+struct AudioFileInfo {
+  /** The file path.
+   */
+  const char* filePath;
+  /** The file duration (ms).
+   */
+  int durationMs;
+};
+
+/** The information acquisition state. This enum is reported
+ * in \ref IRtcEngineEventHandler::onRequestAudioFileInfo "onRequestAudioFileInfo".
+ *
+ * @since v3.5.1
+ */
+enum AUDIO_FILE_INFO_ERROR {
+  /** 0: Successfully get the information of an audio file.
+   */
+  AUDIO_FILE_INFO_ERROR_OK = 0,
+
+  /** 1: Fail to get the information of an audio file.
+   */
+  AUDIO_FILE_INFO_ERROR_FAILURE = 1
+};
+
 /** The detailed options of a user.
  */
 struct ClientRoleOptions
@@ -1991,6 +2380,40 @@ enum QUALITY_ADAPT_INDICATION {
   /** The quality worsens because the network bandwidth decreases. */
   ADAPT_DOWN_BANDWIDTH = 2,
 };
+/** Quality of experience (QoE) of the local user when receiving a remote audio stream.
+ *
+ * @since v3.3.0
+ */
+enum EXPERIENCE_QUALITY_TYPE {
+  /** 0: QoE of the local user is good.  */
+  EXPERIENCE_QUALITY_GOOD = 0,
+  /** 1: QoE of the local user is poor.  */
+  EXPERIENCE_QUALITY_BAD = 1,
+};
+
+/**
+ * The reason for poor QoE of the local user when receiving a remote audio stream.
+ *
+ * @since v3.3.0
+ */
+enum EXPERIENCE_POOR_REASON {
+  /** 0: No reason, indicating good QoE of the local user.
+   */
+  EXPERIENCE_REASON_NONE = 0,
+  /** 1: The remote user's network quality is poor.
+   */
+  REMOTE_NETWORK_QUALITY_POOR = 1,
+  /** 2: The local user's network quality is poor.
+   */
+  LOCAL_NETWORK_QUALITY_POOR = 2,
+  /** 4: The local user's Wi-Fi or mobile network signal is weak.
+   */
+  WIRELESS_SIGNAL_POOR = 4,
+  /** 8: The local user enables both Wi-Fi and bluetooth, and their signals interfere with each other.
+   * As a result, audio transmission quality is undermined.
+   */
+  WIFI_BLUETOOTH_COEXIST = 8,
+};
 
 /** The error code in CHANNEL_MEDIA_RELAY_ERROR. */
 enum CHANNEL_MEDIA_RELAY_ERROR {
@@ -2039,61 +2462,83 @@ enum CHANNEL_MEDIA_RELAY_ERROR {
 
 /** The event code in CHANNEL_MEDIA_RELAY_EVENT. */
 enum CHANNEL_MEDIA_RELAY_EVENT {
-    /** 0: The user disconnects from the server due to poor network
-     * connections.
-     */
-    RELAY_EVENT_NETWORK_DISCONNECTED = 0,
-    /** 1: The network reconnects.
-     */
-    RELAY_EVENT_NETWORK_CONNECTED = 1,
-    /** 2: The user joins the source channel.
-     */
-    RELAY_EVENT_PACKET_JOINED_SRC_CHANNEL = 2,
-    /** 3: The user joins the destination channel.
-     */
-    RELAY_EVENT_PACKET_JOINED_DEST_CHANNEL = 3,
-    /** 4: The SDK starts relaying the media stream to the destination channel.
-     */
-    RELAY_EVENT_PACKET_SENT_TO_DEST_CHANNEL = 4,
-    /** 5: The server receives the video stream from the source channel.
-     */
-    RELAY_EVENT_PACKET_RECEIVED_VIDEO_FROM_SRC = 5,
-    /** 6: The server receives the audio stream from the source channel.
-     */
-    RELAY_EVENT_PACKET_RECEIVED_AUDIO_FROM_SRC = 6,
-    /** 7: The destination channel is updated.
-     */
-    RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL = 7,
-    /** 8: The destination channel update fails due to internal reasons.
-     */
-    RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_REFUSED = 8,
-    /** 9: The destination channel does not change, which means that the
-     * destination channel fails to be updated.
-     */
-    RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_NOT_CHANGE = 9,
-    /** 10: The destination channel name is NULL.
-     */
-    RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_IS_NULL = 10,
-    /** 11: The video profile is sent to the server.
-     */
-    RELAY_EVENT_VIDEO_PROFILE_UPDATE = 11,
+  /** 0: The user disconnects from the server due to poor network
+   * connections.
+   */
+  RELAY_EVENT_NETWORK_DISCONNECTED = 0,
+  /** 1: The network reconnects.
+   */
+  RELAY_EVENT_NETWORK_CONNECTED = 1,
+  /** 2: The user joins the source channel.
+   */
+  RELAY_EVENT_PACKET_JOINED_SRC_CHANNEL = 2,
+  /** 3: The user joins the destination channel.
+   */
+  RELAY_EVENT_PACKET_JOINED_DEST_CHANNEL = 3,
+  /** 4: The SDK starts relaying the media stream to the destination channel.
+   */
+  RELAY_EVENT_PACKET_SENT_TO_DEST_CHANNEL = 4,
+  /** 5: The server receives the video stream from the source channel.
+   */
+  RELAY_EVENT_PACKET_RECEIVED_VIDEO_FROM_SRC = 5,
+  /** 6: The server receives the audio stream from the source channel.
+   */
+  RELAY_EVENT_PACKET_RECEIVED_AUDIO_FROM_SRC = 6,
+  /** 7: The destination channel is updated.
+   */
+  RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL = 7,
+  /** 8: The destination channel update fails due to internal reasons.
+   */
+  RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_REFUSED = 8,
+  /** 9: The destination channel does not change, which means that the
+   * destination channel fails to be updated.
+   */
+  RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_NOT_CHANGE = 9,
+  /** 10: The destination channel name is NULL.
+   */
+  RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL_IS_NULL = 10,
+  /** 11: The video profile is sent to the server.
+   */
+  RELAY_EVENT_VIDEO_PROFILE_UPDATE = 11,
+  /** 12: The SDK successfully pauses relaying the media stream to destination channels.
+   *
+   * @since v3.5.1
+   */
+  RELAY_EVENT_PAUSE_SEND_PACKET_TO_DEST_CHANNEL_SUCCESS = 12,
+  /** 13: The SDK fails to pause relaying the media stream to destination channels.
+   *
+   * @since v3.5.1
+   */
+  RELAY_EVENT_PAUSE_SEND_PACKET_TO_DEST_CHANNEL_FAILED = 13,
+  /** 14: The SDK successfully resumes relaying the media stream to destination channels.
+   *
+   * @since v3.5.1
+   */
+  RELAY_EVENT_RESUME_SEND_PACKET_TO_DEST_CHANNEL_SUCCESS = 14,
+  /** 15: The SDK fails to resume relaying the media stream to destination channels.
+   *
+   * @since v3.5.1
+   */
+  RELAY_EVENT_RESUME_SEND_PACKET_TO_DEST_CHANNEL_FAILED = 15,
 };
 
 /** The state code in CHANNEL_MEDIA_RELAY_STATE. */
 enum CHANNEL_MEDIA_RELAY_STATE {
-    /** 0: The SDK is initializing.
-     */
-    RELAY_STATE_IDLE = 0,
-    /** 1: The SDK tries to relay the media stream to the destination channel.
-     */
-    RELAY_STATE_CONNECTING = 1,
-    /** 2: The SDK successfully relays the media stream to the destination
-     * channel.
-     */
-    RELAY_STATE_RUNNING = 2,
-    /** 3: A failure occurs. See the details in code.
-     */
-    RELAY_STATE_FAILURE = 3,
+  /** 0: The initial state. After you successfully stop the channel media
+   * relay by calling \ref IRtcEngine::stopChannelMediaRelay "stopChannelMediaRelay",
+   * the \ref IRtcEngineEventHandler::onChannelMediaRelayStateChanged "onChannelMediaRelayStateChanged" callback returns this state.
+   */
+  RELAY_STATE_IDLE = 0,
+  /** 1: The SDK tries to relay the media stream to the destination channel.
+   */
+  RELAY_STATE_CONNECTING = 1,
+  /** 2: The SDK successfully relays the media stream to the destination
+   * channel.
+   */
+  RELAY_STATE_RUNNING = 2,
+  /** 3: A failure occurs. See the details in code.
+   */
+  RELAY_STATE_FAILURE = 3,
 };
 
 /** Statistics of the local video stream.
@@ -2148,6 +2593,11 @@ struct LocalVideoStats
   /** The capture frame rate (fps) of the local video.
    */
   int captureFrameRate;
+  /** The brightness level of the video image captured by the local camera. See #CAPTURE_BRIGHTNESS_LEVEL_TYPE.
+   *
+   * @since v3.3.0
+   */
+  CAPTURE_BRIGHTNESS_LEVEL_TYPE captureBrightnessLevel;
 };
 
 /** Statistics of the remote video stream.
@@ -2503,34 +2953,43 @@ typedef struct TranscodingUser {
  The properties of the watermark and background images.
  */
 typedef struct RtcImage {
-    RtcImage() :
-       url(NULL),
-       x(0),
-       y(0),
-       width(0),
-       height(0)
-    {}
-    /** HTTP/HTTPS URL address of the image on the live video. The maximum length of this parameter is 1024 bytes. */
-    const char* url;
-    /** Horizontal position of the image from the upper left of the live video. */
-    int x;
-    /** Vertical position of the image from the upper left of the live video. */
-    int y;
-    /** Width of the image on the live video. */
-    int width;
-    /** Height of the image on the live video. */
-    int height;
+  RtcImage() : url(NULL), x(0), y(0), width(0), height(0), zOrder(0), alpha(1.0) {}
+  /** HTTP/HTTPS URL address of the image on the live video. The maximum length of this parameter is 1024 bytes. */
+  const char* url;
+  /** Horizontal position of the image from the upper left of the live video. */
+  int x;
+  /** Vertical position of the image from the upper left of the live video. */
+  int y;
+  /** Width of the image on the live video. */
+  int width;
+  /** Height of the image on the live video. */
+  int height;
+  /**
+   * The layer number of the watermark or background image. The value range is [0,255]:
+   * - `0`: (Default) The bottom layer.
+   * - `255`: The top layer.
+   *
+   * @since v3.6.0
+   */
+  int zOrder;
+  /** The transparency of the watermark or background image. The value range is [0.0,1.0]:
+   * - `0.0`: Completely transparent.
+   * - `1.0`: (Default) Opaque.
+   *
+   * @since v3.6.0
+   */
+  double alpha;
 } RtcImage;
-/** The configuration for advanced features of the RTMP streaming with transcoding.
+/// @cond
+/** The configuration for advanced features of the RTMP or RTMPS streaming with transcoding.
  */
 typedef struct LiveStreamAdvancedFeature {
-    LiveStreamAdvancedFeature() : featureName(NULL) , opened(false) {
-    }
-
-    /** The advanced feature for high-quality video with a lower bitrate. */
-    const char* LBHQ = "lbhq";
-    /** The advanced feature for the optimized video encoder. */
-    const char* VEO = "veo";
+  LiveStreamAdvancedFeature() : featureName(NULL), opened(false) {}
+  LiveStreamAdvancedFeature(const char* feat_name, bool open) : featureName(feat_name), opened(open) {}
+  /** The advanced feature for high-quality video with a lower bitrate. */
+  // static const char* LBHQ = "lbhq";
+  /** The advanced feature for the optimized video encoder. */
+  // static const char* VEO = "veo";
 
     /** The name of the advanced feature. It contains LBHQ and VEO.
      */
@@ -2601,26 +3060,43 @@ typedef struct LiveTranscoding {
      */
     const char *transcodingExtraInfo;
 
-    /** **DEPRECATED** The metadata sent to the CDN live client defined by the RTMP or FLV metadata.
-     */
-    const char *metadata;
-    /** The watermark image added to the CDN live publishing stream.
+  /** **DEPRECATED** The metadata sent to the CDN live client defined by the RTMP or HTTP-FLV metadata.
+   */
+  const char* metadata;
+  /**
+   * The watermark on the live video. The format must be in the PNG format. See RtcImage.
+   * You can add a watermark or use an array to add multiple watermarks.
+   * This parameter is used in conjunction with `watermarkCount`.
+   */
+  RtcImage* watermark;
 
-	Ensure that the format of the image is PNG. Once a watermark image is added, the audience of the CDN live publishing stream can see the watermark image. See RtcImage.
-    */
-    RtcImage* watermark;
-    /** The background image added to the CDN live publishing stream.
+  /**
+   * The number of watermarks on the live video. The value range is [0,100].
+   * This parameter is used in conjunction with `watermark`.
+   *
+   * @since v3.6.0
+   */
+  unsigned int watermarkCount;
 
-     Once a background image is added, the audience of the CDN live publishing stream can see the background image. See RtcImage.
-    */
-    RtcImage* backgroundImage;
-    /** Self-defined audio-sample rate: #AUDIO_SAMPLE_RATE_TYPE.
-    */
-    AUDIO_SAMPLE_RATE_TYPE audioSampleRate;
-    /** Bitrate of the CDN live audio output stream. The default value is 48 Kbps, and the highest value is 128.
-     */
-    int audioBitrate;
-    /** The numbder of audio channels for the CDN live stream. ar recommends choosing 1 (mono), or 2 (stereo) audio channels. Special players are required if you choose option 3, 4, or 5:
+  /**
+   * The background image on the live video. The format must be in the PNG format. See RtcImage.
+   * You can add a background image or use an array to add multiple background images.
+   * This parameter is used in conjunction with `backgroundImageCount`.
+   */
+  RtcImage* backgroundImage;
+  /**
+   * The number of background images on the live video. The value range is [0,100].
+   * This parameter is used in conjunction with `backgroundImage`.
+   */
+  unsigned int backgroundImageCount;
+
+  /** Self-defined audio-sample rate: #AUDIO_SAMPLE_RATE_TYPE.
+   */
+  AUDIO_SAMPLE_RATE_TYPE audioSampleRate;
+  /** Bitrate of the CDN live audio output stream. The default value is 48 Kbps, and the highest value is 128.
+   */
+  int audioBitrate;
+  /** The numbder of audio channels for the CDN live stream. AR recommends choosing 1 (mono), or 2 (stereo) audio channels. Special players are required if you choose option 3, 4, or 5:
 
      - 1: (Default) Mono.
      - 2: Stereo.
@@ -2830,12 +3306,31 @@ struct ChannelMediaRelayConfiguration {
      */
 	int destCount;
 
-	ChannelMediaRelayConfiguration()
-			: srcInfo(nullptr)
-			, destInfos(nullptr)
-			, destCount(0)
-	{}
+  ChannelMediaRelayConfiguration() : srcInfo(nullptr), destInfos(nullptr), destCount(0) {}
 };
+/// @cond
+struct LocalAccessPointConfiguration {
+  /** local access point ip address list.
+   */
+  const char** ipList;
+  /** the number of local access point ip address.
+   */
+  int ipListSize;
+  /** local access point domain list.
+   */
+  const char** domainList;
+  /** the number of local access point domain.
+   */
+  int domainListSize;
+  /** certificate domain name installed on specific local access point. pass "" means using sni domain on specific local access point
+   */
+  const char* verifyDomainName;
+  /** local proxy connection mode, connectivity first or local only.
+   */
+  LOCAL_PROXY_MODE mode;
+  LocalAccessPointConfiguration() : ipList(nullptr), ipListSize(0), domainList(nullptr), domainListSize(0), verifyDomainName(nullptr), mode(kConnectivityFirst) {}
+};
+/// @endcond
 
 /**  **DEPRECATED** Lifecycle of the CDN live video stream.
 */
@@ -3069,46 +3564,130 @@ struct VideoCanvas
 };
 
 /** Image enhancement options.
-*/
-struct BeautyOptions {
-    /** The contrast level, used with the @p lightening parameter.
-    */
-    enum LIGHTENING_CONTRAST_LEVEL
-    {
-        /** Low contrast level. */
-        LIGHTENING_CONTRAST_LOW = 0,
-        /** (Default) Normal contrast level. */
-        LIGHTENING_CONTRAST_NORMAL,
-        /** High contrast level. */
-        LIGHTENING_CONTRAST_HIGH
-    };
-
-/** The contrast level, used with the @p lightening parameter.
-*/
-LIGHTENING_CONTRAST_LEVEL lighteningContrastLevel;
-
-/** The brightness level. The value ranges from 0.0 (original) to 1.0. */
-float lighteningLevel;
-
-/** The sharpness level. The value ranges between 0 (original) and 1. This parameter is usually used to remove blemishes.
  */
-float smoothnessLevel;
+struct BeautyOptions {
+  /** The contrast level, often used in conjunction with `lighteningLevel`.
+   */
+  enum LIGHTENING_CONTRAST_LEVEL {
+    /** 0: Low contrast level. */
+    LIGHTENING_CONTRAST_LOW = 0,
+    /** (Default) Normal contrast level. */
+    LIGHTENING_CONTRAST_NORMAL,
+    /** High contrast level. */
+    LIGHTENING_CONTRAST_HIGH
+  };
 
-/** The redness level. The value ranges between 0 (original) and 1. This parameter adjusts the red saturation level.
-*/
-float rednessLevel;
+  /** The contrast level, often used in conjunction with `lighteningLevel`.
+   * The higher the value, the greater the contrast level. See #LIGHTENING_CONTRAST_LEVEL.
+   */
+  LIGHTENING_CONTRAST_LEVEL lighteningContrastLevel;
 
-BeautyOptions(LIGHTENING_CONTRAST_LEVEL contrastLevel, float lightening, float smoothness, float redness)
-    : lighteningLevel(lightening),
-    smoothnessLevel(smoothness),
-    rednessLevel(redness),
-    lighteningContrastLevel(contrastLevel) {}
+  /**
+   * The brightening level, in the range [0.0,1.0], where 0.0 means the original brightening. The default value is 0.6. The higher the value, the greater the brightening level.
+   */
+  float lighteningLevel;
 
-BeautyOptions()
-    : lighteningLevel(0),
-    smoothnessLevel(0),
-    rednessLevel(0),
-    lighteningContrastLevel(LIGHTENING_CONTRAST_NORMAL) {}
+  /** The smoothness level, in the range [0.0,1.0], where 0.0 means the original smoothness. The default value is 0.5. The higher the value, the greater the smoothness level.
+   */
+  float smoothnessLevel;
+
+  /** The redness level, in the range [0.0,1.0], where 0.0 means the original redness. The default value is 0.1. The higher the value, the greater the redness level.
+   */
+  float rednessLevel;
+
+  /** The sharpness level, in the range [0.0,1.0], where 0.0 means the original sharpness.
+   * The default value is 0.3. The higher the value, the greater the sharpness level.
+   *
+   * @since v3.6.0
+   */
+  float sharpnessLevel;
+
+  BeautyOptions(LIGHTENING_CONTRAST_LEVEL contrastLevel, float lightening, float smoothness, float redness, float sharpness) : lighteningLevel(lightening), smoothnessLevel(smoothness), rednessLevel(redness), lighteningContrastLevel(contrastLevel), sharpnessLevel(sharpness) {}
+
+  BeautyOptions() : lighteningLevel(0), smoothnessLevel(0), rednessLevel(0), sharpnessLevel(0), lighteningContrastLevel(LIGHTENING_CONTRAST_NORMAL) {}
+};
+
+/** The custom background image.
+ *
+ * @since v3.4.5
+ */
+struct VirtualBackgroundSource {
+  /** The type of the custom background image.
+   *
+   * @since v3.4.5
+   */
+  enum BACKGROUND_SOURCE_TYPE {
+    /**
+     * 1: (Default) The background image is a solid color.
+     */
+    BACKGROUND_COLOR = 1,
+    /**
+     * The background image is a file in PNG or JPG format.
+     */
+    BACKGROUND_IMG,
+    /**
+     * The background image is blurred.
+     *
+     * @since v3.5.1
+     */
+    BACKGROUND_BLUR,
+  };
+
+  /**
+   * The degree of blurring applied to the custom background image.
+   *
+   * @since v3.5.1
+   */
+  enum BACKGROUND_BLUR_DEGREE {
+    /**
+     * 1: The degree of blurring applied to the custom background image is low.
+     * The user can almost see the background clearly.
+     */
+    BLUR_DEGREE_LOW = 1,
+    /**
+     * The degree of blurring applied to the custom background image is medium.
+     * It is difficult for the user to recognize details in the background.
+     */
+    BLUR_DEGREE_MEDIUM,
+    /**
+     * (Default) The degree of blurring applied to the custom background image is high.
+     * The user can barely see any distinguishing features in the background.
+     */
+    BLUR_DEGREE_HIGH,
+  };
+
+  /** The type of the custom background image. See #BACKGROUND_SOURCE_TYPE.
+   */
+  BACKGROUND_SOURCE_TYPE background_source_type;
+
+  /**
+   * The color of the custom background image. The format is a hexadecimal integer defined by RGB, without the # sign,
+   * such as 0xFFB6C1 for light pink. The default value is 0xFFFFFF, which signifies white. The value range
+   * is [0x000000,0xFFFFFF]. If the value is invalid, the SDK replaces the original background image with a white
+   * background image.
+   *
+   * @note This parameter takes effect only when the type of the custom background image is `BACKGROUND_COLOR`.
+   */
+  unsigned int color;
+
+  /**
+   * The local absolute path of the custom background image. PNG and JPG formats are supported. If the path is invalid,
+   * the SDK replaces the original background image with a white background image.
+   *
+   * @note This parameter takes effect only when the type of the custom background image is `BACKGROUND_IMG`.
+   */
+  const char* source;
+
+  /**
+   * The degree of blurring applied to the custom background image. See #BACKGROUND_BLUR_DEGREE.
+   *
+   * @note This parameter takes effect only when the type of the custom background image is `BACKGROUND_BLUR`.
+   *
+   * @since v3.5.1
+   */
+  BACKGROUND_BLUR_DEGREE blur_degree;
+
+  VirtualBackgroundSource() : color(0xffffff), source(NULL), background_source_type(BACKGROUND_COLOR), blur_degree(BLUR_DEGREE_HIGH) {}
 };
 
 /**
@@ -3123,58 +3702,160 @@ struct UserInfo {
    * The user account.
    */
   char userAccount[MAX_USER_ACCOUNT_LENGTH];
-  UserInfo()
-      : uid(0) {
-    userAccount[0] = '\0';
-  }
+  UserInfo() : uid(0) { userAccount[0] = '\0'; }
+};
+/**
+ * The configuration of the audio and video call loop test.
+ *
+ * @since v3.5.2
+ */
+struct EchoTestConfiguration {
+  /**
+   * The view used to render the local user's video. This parameter is only applicable to scenarios testing video
+   * devices, that is, when `enableVideo` is `true`.
+   */
+  view_t view;
+  /**
+   * Whether to enable the audio device for the call loop test:
+   * - true: (Default) Enables the audio device. To test the audio device, set this parameter as `true`.
+   * - false: Disables the audio device.
+   */
+  bool enableAudio;
+  /**
+   * Whether to enable the video device for the call loop test:
+   * - true: (Default) Enables the video device. To test the video device, set this parameter as `true`.
+   * - false: Disables the video device.
+   */
+  bool enableVideo;
+  /**
+   * The token used to secure the audio and video call loop test. If you do not enable App Certificate in AR
+   * Console, you do not need to pass a value in this parameter; if you have enabled App Certificate in AR Console,
+   * you must pass a token in this parameter, the `uid` used when you generate the token must be 0xFFFFFFFF, and the
+   * channel name used must be the channel name that identifies each audio and video call loop tested. For server-side
+   * token generation, see [Authenticate Your Users with Tokens](https://docs.agora.io/en/Interactive%20Broadcast/token_server?platform=All%20Platforms).
+   */
+  const char* token;
+  /**
+   * The channel name that identifies each audio and video call loop. To ensure proper loop test functionality, the
+   * channel name passed in to identify each loop test cannot be the same when users of the same project (App ID)
+   * perform audio and video call loop tests on different devices.
+   */
+  const char* channelId;
+  EchoTestConfiguration() : view(NULL), enableAudio(true), enableVideo(true), token(NULL), channelId(NULL) {}
+  EchoTestConfiguration(view_t v, bool ea, bool ev, const char* t, const char* c) : view(v), enableAudio(ea), enableVideo(ev), token(t), channelId(c) {}
 };
 
 /**
  *  Regions for connetion.
  */
 enum AREA_CODE {
-    /**
-     * Mainland China.
-     */
-    AREA_CODE_CN = 0x00000001,
-    /**
-     * North America.
-     */
-    AREA_CODE_NA = 0x00000002,
-    /**
-     * Europe.
-     */
-    AREA_CODE_EU = 0x00000004,
-    /**
-     * Asia, excluding Mainland China.
-     */
-    AREA_CODE_AS = 0x00000008,
-    /**
-     * Japan.
-     */
-    AREA_CODE_JP = 0x00000010,
-    /**
-     * India.
-     */
-    AREA_CODE_IN = 0x00000020,
-    /**
-     * (Default) Global.
-     */
-    AREA_CODE_GLOB = 0xFFFFFFFF
+  /**
+   * Mainland China.
+   */
+  AREA_CODE_CN = 0x00000001,
+  /**
+   * North America.
+   */
+  AREA_CODE_NA = 0x00000002,
+  /**
+   * Europe.
+   */
+  AREA_CODE_EU = 0x00000004,
+  /**
+   * Asia, excluding Mainland China.
+   */
+  AREA_CODE_AS = 0x00000008,
+  /**
+   * Japan.
+   */
+  AREA_CODE_JP = 0x00000010,
+  /**
+   * India.
+   */
+  AREA_CODE_IN = 0x00000020,
+  /**
+   * (Default) Global.
+   */
+  AREA_CODE_GLOB = 0xFFFFFFFF
 };
 
 enum ENCRYPTION_CONFIG {
-    /**
-     * - 1: Force set master key and mode;
-     * - 0: Not force set, checking whether encryption plugin exists
-     */
-    ENCRYPTION_FORCE_SETTING = (1 << 0),
-    /**
-     * - 1: Force not encrypting packet;
-     * - 0: Not force encrypting;
-     */
-    ENCRYPTION_FORCE_DISABLE_PACKET = (1 << 1)
+  /**
+   * - 1: Force set master key and mode;
+   * - 0: Not force set, checking whether encryption plugin exists
+   */
+  ENCRYPTION_FORCE_SETTING = (1 << 0),
+  /**
+   * - 1: Force not encrypting packet;
+   * - 0: Not force encrypting;
+   */
+  ENCRYPTION_FORCE_DISABLE_PACKET = (1 << 1)
 };
+/// @cond
+typedef int ContentInspectType;
+/**
+ * (Default) content inspect type invalid
+ */
+const ContentInspectType kContentInspectInvalid = 0;
+/**
+ * Content inspect type moderation
+ */
+const ContentInspectType kContentInspectModeration = 1;
+/**
+ * Content inspect type supervise
+ */
+const ContentInspectType kContentInspectSupervise = 2;
+
+enum MAX_CONTENT_INSPECT_MODULE_TYPE {
+  /** The maximum count of content inspect feature type is 32.
+   */
+  MAX_CONTENT_INSPECT_MODULE_COUNT = 32
+};
+/// @endcond
+/// @cond
+/** Definition of ContentInspectModule.
+ */
+struct ContentInspectModule {
+  /**
+   * The content inspect module type.
+   * the module type can be 0 to 31.
+   * kContentInspectInvalid(0)
+   * kContentInspectModeration(1)
+   * kContentInspectSupervise(2)
+   */
+  ContentInspectType type;
+  /**The content inspect frequency, default is 0 second.
+   * the frequency <= 0 is invalid.
+   */
+  int interval;
+  /**The content inspect default value.
+   */
+  ContentInspectModule() {
+    type = kContentInspectInvalid;
+    interval = 0;
+  }
+};
+/// @endcond
+/// @cond
+/** Definition of ContentInspectConfig.
+ */
+struct ContentInspectConfig {
+  /** The extra information, max length of extraInfo is 1024.
+   *  The extra information will send to server with content(image).
+   */
+  const char* extraInfo;
+  /**The content inspect modules, max length of modules is 32.
+   * the content(snapshot of send video stream, image) can be used to max of 32 types functions.
+   */
+  ContentInspectModule modules[MAX_CONTENT_INSPECT_MODULE_COUNT];
+  /**The content inspect module count.
+   */
+  int moduleCount;
+
+  ContentInspectConfig() : extraInfo(NULL), moduleCount(0) {}
+};
+/// @endcond
+
 /** Definition of IPacketObserver.
 */
 class IPacketObserver
@@ -3227,7 +3908,7 @@ public:
 };
 
 
-#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_MAC))
 /** The capture type of the custom video source.
  */
 enum VIDEO_CAPTURE_TYPE {
@@ -3342,6 +4023,158 @@ public:
     virtual VideoContentHint getVideoContentHint() = 0;
 };
 #endif
+
+#if (defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE)
+/**
+ * The target size of the thumbnail or icon. (macOS only)
+ *
+ * @since v3.5.2
+ */
+struct SIZE {
+  /** The target width (px) of the thumbnail or icon. The default value is 0.
+   */
+  int width;
+  /** The target height (px) of the thumbnail or icon. The default value is 0.
+   */
+  int height;
+
+  SIZE() : width(0), height(0) {}
+  SIZE(int w, int h) : width(w), height(h) {}
+};
+#endif
+/**
+ * The image content of the thumbnail or icon.
+ *
+ * @since v3.5.2
+ *
+ * @note The default image is in the RGBA format. If you need to use another format, you need to convert the image on
+ * your own.
+ */
+struct ThumbImageBuffer {
+  /**
+   * The buffer of the thumbnail or icon.
+   */
+  const char* buffer;
+  /**
+   * The buffer length (bytes) of the thumbnail or icon.
+   */
+  unsigned int length;
+  /**
+   * The actual width (px) of the thumbnail or icon.
+   */
+  unsigned int width;
+  /**
+   * The actual height (px) of the thumbnail or icon.
+   */
+  unsigned int height;
+  ThumbImageBuffer() : buffer(nullptr), length(0), width(0), height(0) {}
+};
+/**
+ * The type of the shared target.
+ *
+ * @since v3.5.2
+ */
+enum ScreenCaptureSourceType {
+  /**
+   * -1: Unknown type.
+   */
+  ScreenCaptureSourceType_Unknown = -1,
+  /**
+   * 0: The shared target is a window.
+   */
+  ScreenCaptureSourceType_Window = 0,
+  /**
+   * 1: The shared target is a screen of a particular monitor.
+   */
+  ScreenCaptureSourceType_Screen = 1,
+  /**
+   * 2: Reserved parameter.
+   */
+  ScreenCaptureSourceType_Custom = 2,
+};
+/**
+ * The information about the specified shareable window or screen.
+ *
+ * @since v3.5.2
+ */
+struct ScreenCaptureSourceInfo {
+  /**
+   * The type of the shared target. See \ref agora::rtc::ScreenCaptureSourceType "ScreenCaptureSourceType".
+   */
+  ScreenCaptureSourceType type;
+  /**
+   * The window ID for a window or the display ID for a screen.
+   */
+  view_t sourceId;
+  /**
+   * The name of the window or screen. UTF-8 encoding.
+   */
+  const char* sourceName;
+  /**
+   * The image content of the thumbnail. See ThumbImageBuffer.
+   */
+  ThumbImageBuffer thumbImage;
+  /**
+   * The image content of the icon. See ThumbImageBuffer.
+   */
+  ThumbImageBuffer iconImage;
+  /**
+   * The process to which the window belongs. UTF-8 encoding.
+   */
+  const char* processPath;
+  /**
+   * The title of the window. UTF-8 encoding.
+   */
+  const char* sourceTitle;
+  /**
+   * Determines whether the screen is the primary display:
+   * - true: The screen is the primary display.
+   * - false: The screen is not the primary display.
+   */
+  bool primaryMonitor;
+  ScreenCaptureSourceInfo() : type(ScreenCaptureSourceType_Unknown), sourceId(nullptr), sourceName(nullptr), processPath(nullptr), sourceTitle(nullptr), primaryMonitor(false) {}
+};
+/**
+ * The IScreenCaptureSourceList class.
+ *
+ * @since v3.5.2
+ */
+class IScreenCaptureSourceList {
+ protected:
+  virtual ~IScreenCaptureSourceList(){};
+
+ public:
+  /**
+   * Gets the number of shareable windows and screens.
+   *
+   * @since v3.5.2
+   *
+   * @return The number of shareable windows and screens.
+   */
+  virtual unsigned int getCount() = 0;
+  /**
+   * Gets information about the specified shareable window or screen.
+   *
+   * @since v3.5.2
+   *
+   * After you get IScreenCaptureSourceList, you can pass in the index value of the specified shareable window or
+   * screen to get information about that window or screen from ScreenCaptureSourceInfo.
+   *
+   * @param index The index of the specified shareable window or screen. The value range is [0,`getCount()`).
+   *
+   * @return ScreenCaptureSourceInfo
+   */
+  virtual ScreenCaptureSourceInfo getSourceInfo(unsigned int index) = 0;
+  /**
+   * Releases IScreenCaptureSourceList.
+   *
+   * @since v3.5.2
+   *
+   * After you get the list of shareable windows and screens, to avoid memory leaks, call `release` to release
+   * `IScreenCaptureSourceList` instead of deleting `IScreenCaptureSourceList` directly.
+   */
+  virtual void release() = 0;
+};
 
 /** The SDK uses the IRtcEngineEventHandler interface class to send callbacks to the application. The application inherits the methods of this interface class to retrieve these callbacks.
 
@@ -4114,9 +4947,8 @@ public:
 
      If the *startAudioMixing* method call fails, an error code returns in the \ref IRtcEngineEventHandler::onError "onError" callback.
 
-     */
-    virtual void onAudioMixingFinished() {
-    }
+   */
+  virtual void onAudioMixingFinished() {}
 
     /** Occurs when the state of the local user's audio mixing file changes.
 
@@ -4128,28 +4960,41 @@ public:
      @param state The state code. See #AUDIO_MIXING_STATE_TYPE.
      @param errorCode The error code. See #AUDIO_MIXING_ERROR_TYPE.
      */
-    virtual void onAudioMixingStateChanged(AUDIO_MIXING_STATE_TYPE state, AUDIO_MIXING_ERROR_TYPE errorCode){
-    }
-    /** Occurs when a remote user starts audio mixing.
+  virtual void onAudioMixingStateChanged(AUDIO_MIXING_STATE_TYPE state, AUDIO_MIXING_REASON_TYPE reason) {}
+  /** Occurs when a remote user starts audio mixing.
 
-     When a remote user calls \ref IRtcEngine::startAudioMixing "startAudioMixing" to play the background music, the SDK reports this callback.
-     */
-    virtual void onRemoteAudioMixingBegin() {
-    }
-    /** Occurs when a remote user finishes audio mixing.
-     */
-    virtual void onRemoteAudioMixingEnd() {
-    }
+   When a remote user calls \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" to play the background music, the SDK reports this callback.
+   */
+  virtual void onRemoteAudioMixingBegin() {}
+  /** Occurs when a remote user finishes audio mixing.
+   */
+  virtual void onRemoteAudioMixingEnd() {}
 
-    /** Occurs when the local audio effect playback finishes.
+  /**
+   * Reports the information of an audio file.
+   *
+   * @since v3.5.1
+   *
+   * After successfully calling \ref IRtcEngine::getAudioFileInfo "getAudioFileInfo", the SDK triggers this
+   * callback to report the information of the audio file, such as the file path and duration.
+   *
+   * @param info The information of an audio file. See AudioFileInfo.
+   * @param error The information acquisition state. See #AUDIO_FILE_INFO_ERROR.
+   */
+  virtual void onRequestAudioFileInfo(const AudioFileInfo& info, AUDIO_FILE_INFO_ERROR error) {}
 
-     The SDK triggers this callback when the local audio effect file playback finishes.
+  /** Occurs when the local audio effect playback finishes.
 
-     @param soundId ID of the local audio effect. Each local audio effect has a unique ID.
-     */
-    virtual void onAudioEffectFinished(int soundId) {
-    }
+   The SDK triggers this callback when the local audio effect file playback finishes.
 
+   @param soundId ID of the local audio effect. Each local audio effect has a unique ID.
+   */
+  virtual void onAudioEffectFinished(int soundId) {}
+  /// @cond
+  /** Occurs when AirPlay is connected.
+   */
+  virtual void onAirPlayConnected() {}
+  /// @endcond
 
     /**
      Occurs when the SDK decodes the first remote audio frame for playback.
@@ -4300,53 +5145,104 @@ public:
         (void)cached;
     }
 
-    /** Occurs when the media engine loads.*/
-    virtual void onMediaEngineLoadSuccess() {
-    }
-    /** Occurs when the media engine call starts.*/
-    virtual void onMediaEngineStartCallSuccess() {
-    }
-    /// @cond
-    /** Reports whether the super-resolution algorithm is enabled.
-     *
-     * @since v3.2.0
-     *
-     * After calling \ref IRtcEngine::enableRemoteSuperResolution "enableRemoteSuperResolution", the SDK triggers this
-     * callback to report whether the super-resolution algorithm is successfully enabled. If not successfully enabled,
-     * you can use reason for troubleshooting.
-     *
-     * @param uid The ID of the remote user.
-     * @param enabled Whether the super-resolution algorithm is successfully enabled:
-     * - true: The super-resolution algorithm is successfully enabled.
-     * - false: The super-resolution algorithm is not successfully enabled.
-     * @param reason The reason why the super-resolution algorithm is not successfully enabled. See #SUPER_RESOLUTION_STATE_REASON.
-     */
-    virtual void onUserSuperResolutionEnabled(uid_t uid, bool enabled, SUPER_RESOLUTION_STATE_REASON reason) {
-        (void)uid;
-        (void)enabled;
-        (void)reason;
-    }
-    /// @endcond
+  /** Occurs when the media engine loads.*/
+  virtual void onMediaEngineLoadSuccess() {}
+  /** Occurs when the media engine call starts.*/
+  virtual void onMediaEngineStartCallSuccess() {}
 
-    /** Occurs when the state of the media stream relay changes.
-     *
-     * The SDK returns the state of the current media relay with any error
-     * message.
-     *
-     * @param state The state code in #CHANNEL_MEDIA_RELAY_STATE.
-     * @param code The error code in #CHANNEL_MEDIA_RELAY_ERROR.
-     */
-    virtual void onChannelMediaRelayStateChanged(CHANNEL_MEDIA_RELAY_STATE state,CHANNEL_MEDIA_RELAY_ERROR code) {
-    }
+  /** Reports whether the super resolution feature is successfully enabled. (beta feature)
+   *
+   * @since v3.5.1
+   *
+   * After calling \ref IRtcEngine::enableRemoteSuperResolution "enableRemoteSuperResolution", the SDK triggers this
+   * callback to report whether super resolution is successfully enabled. If it is not successfully enabled,
+   * use `reason` for troubleshooting.
+   *
+   * @param uid The user ID of the remote user.
+   * @param enabled Whether super resolution is successfully enabled:
+   * - true: Super resolution is successfully enabled.
+   * - false: Super resolution is not successfully enabled.
+   * @param reason The reason why super resolution is not successfully enabled or the message
+   * that confirms success. See #SUPER_RESOLUTION_STATE_REASON.
+   *
+   */
+  virtual void onUserSuperResolutionEnabled(uid_t uid, bool enabled, SUPER_RESOLUTION_STATE_REASON reason) {
+    (void)uid;
+    (void)enabled;
+    (void)reason;
+  }
 
-    /** Reports events during the media stream relay.
-     *
-     * @param code The event code in #CHANNEL_MEDIA_RELAY_EVENT.
-     */
-    virtual void onChannelMediaRelayEvent(CHANNEL_MEDIA_RELAY_EVENT code) {
-    }
+  /**
+   * Reports whether the virtual background is successfully enabled. (beta feature)
+   *
+   * @since v3.4.5
+   *
+   * After you call \ref IRtcEngine::enableVirtualBackground "enableVirtualBackground", the SDK triggers this callback
+   * to report whether the virtual background is successfully enabled.
+   *
+   * @note If the background image customized in the virtual background is in PNG or JPG format, the triggering of this
+   * callback is delayed until the image is read.
+   *
+   * @param enabled Whether the virtual background is successfully enabled:
+   * - true: The virtual background is successfully enabled.
+   * - false: The virtual background is not successfully enabled.
+   * @param reason The reason why the virtual background is not successfully enabled or the message that confirms
+   * success. See #VIRTUAL_BACKGROUND_SOURCE_STATE_REASON.
+   */
+  virtual void onVirtualBackgroundSourceEnabled(bool enabled, VIRTUAL_BACKGROUND_SOURCE_STATE_REASON reason) {
+    (void)enabled;
+    (void)reason;
+  }
+  /// @cond
+  /** Reports result of Content Inspect*/
+  virtual void onContentInspectResult(CONTENT_INSPECT_RESULT result) { (void)result; }
+  /// @endcond
+  /**
+   * Reports the result of taking a video snapshot.
+   *
+   * @since v3.5.2
+   *
+   * After a successful \ref IRtcEngine::takeSnapshot "takeSnapshot" method call, the SDK triggers this callback to
+   * report whether the snapshot is successfully taken as well as the details for the snapshot taken.
+   *
+   * @param channel The channel name.
+   * @param uid The user ID of the user. A `uid` of 0 indicates the local user.
+   * @param filePath The local path of the snapshot.
+   * @param width The width (px) of the snapshot.
+   * @param height The height (px) of the snapshot.
+   * @param errCode The message that confirms success or the reason why the snapshot is not successfully taken:
+   * - `0`: Success.
+   * - < 0: Failure:
+   *  - `-1`: The SDK fails to write data to a file or encode a JPEG image.
+   *  - `-2`: The SDK does not find the video stream of the specified user within one second after
+   * the \ref IRtcEngine::takeSnapshot "takeSnapshot" method call succeeds.
+   */
+  virtual void onSnapshotTaken(const char* channel, uid_t uid, const char* filePath, int width, int height, int errCode) {
+    (void)channel;
+    (void)uid;
+    (void)filePath;
+    (void)width;
+    (void)height;
+    (void)errCode;
+  }
 
-    /** Occurs when the engine sends the first local audio frame.
+  /** Occurs when the state of the media stream relay changes.
+   *
+   * The SDK returns the state of the current media relay with any error
+   * message.
+   *
+   * @param state The state code in #CHANNEL_MEDIA_RELAY_STATE.
+   * @param code The error code in #CHANNEL_MEDIA_RELAY_ERROR.
+   */
+  virtual void onChannelMediaRelayStateChanged(CHANNEL_MEDIA_RELAY_STATE state, CHANNEL_MEDIA_RELAY_ERROR code) {}
+
+  /** Reports events during the media stream relay.
+   *
+   * @param code The event code in #CHANNEL_MEDIA_RELAY_EVENT.
+   */
+  virtual void onChannelMediaRelayEvent(CHANNEL_MEDIA_RELAY_EVENT code) {}
+
+  /** Occurs when the engine sends the first local audio frame.
 
      @deprecated Deprecated as of v3.1.0. Use the \ref IRtcEngineEventHandler::onFirstLocalAudioFramePublished "onFirstLocalAudioFramePublished" callback instead.
 
@@ -4382,29 +5278,30 @@ public:
     }
 
   /**
-   Occurs when the state of the RTMP streaming changes.
-
-   The SDK triggers this callback to report the result of the local user calling the \ref ar::rtc::IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" or \ref ar::rtc::IRtcEngine::removePublishStreamUrl "removePublishStreamUrl" method.
-
-   This callback indicates the state of the RTMP streaming. When exceptions occur, you can troubleshoot issues by referring to the detailed error descriptions in the *errCode* parameter.
-
-   @param url The RTMP URL address.
-   @param state The RTMP streaming state. See: #RTMP_STREAM_PUBLISH_STATE.
-   @param errCode The detailed error information for streaming. See: #RTMP_STREAM_PUBLISH_ERROR.
+   * Occurs when the state of the RTMP or RTMPS streaming changes.
+   *
+   * When the CDN live streaming state changes, the SDK triggers this callback to report the current state and the reason
+   * why the state has changed.
+   *
+   * When exceptions occur, you can troubleshoot issues by referring to the detailed error descriptions in the *errCode* parameter.
+   *
+   * @param url The CDN streaming URL.
+   * @param state The RTMP or RTMPS streaming state. See: #RTMP_STREAM_PUBLISH_STATE.
+   * @param errCode The detailed error information for streaming. See: #RTMP_STREAM_PUBLISH_ERROR_TYPE.
    */
-  virtual void onRtmpStreamingStateChanged(const char *url, RTMP_STREAM_PUBLISH_STATE state, RTMP_STREAM_PUBLISH_ERROR errCode) {
-    (void) url;
-    (void) state;
-    (void) errCode;
+  virtual void onRtmpStreamingStateChanged(const char* url, RTMP_STREAM_PUBLISH_STATE state, RTMP_STREAM_PUBLISH_ERROR_TYPE errCode) {
+    (void)url;
+    (void)state;
+    (void)errCode;
   }
 
- /** Reports events during the RTMP streaming.
-  *
-  * @since v3.1.0
-  *
-  * @param url The RTMP streaming URL.
-  * @param eventCode The event code. See #RTMP_STREAMING_EVENT
-  */
+  /** Reports events during the RTMP or RTMPS streaming.
+   *
+   * @since v3.1.0
+   *
+   * @param url The RTMP or RTMPS streaming URL.
+   * @param eventCode The event code. See #RTMP_STREAMING_EVENT
+   */
   virtual void onRtmpStreamingEvent(const char* url, RTMP_STREAMING_EVENT eventCode) {
       (void) url;
       (void) eventCode;
@@ -4414,31 +5311,32 @@ public:
 
      Reports the result of calling the \ref IRtcEngine::addPublishStreamUrl "addPublishStreamUrl" method. (CDN live only.)
 
-     @param url The RTMP URL address.
-     @param error Error code: #ERROR_CODE_TYPE. Main errors include:
-     - #ERR_OK (0): The publishing succeeds.
-     - #ERR_FAILED (1): The publishing fails.
-     - #ERR_INVALID_ARGUMENT (2): Invalid argument used. If, for example, you did not call \ref ar::rtc::IRtcEngine::setLiveTranscoding "setLiveTranscoding" to configure LiveTranscoding before calling \ref ar::rtc::IRtcEngine::addPublishStreamUrl "addPublishStreamUrl", the SDK reports #ERR_INVALID_ARGUMENT.
-     - #ERR_TIMEDOUT (10): The publishing timed out.
-     - #ERR_ALREADY_IN_USE (19): The chosen URL address is already in use for CDN live streaming.
-     - #ERR_RESOURCE_LIMITED (22): The backend system does not have enough resources for the CDN live streaming.
-     - #ERR_ENCRYPTED_STREAM_NOT_ALLOWED_PUBLISH (130): You cannot publish an encrypted stream.
-     - #ERR_PUBLISH_STREAM_CDN_ERROR (151)
-     - #ERR_PUBLISH_STREAM_NUM_REACH_LIMIT (152)
-     - #ERR_PUBLISH_STREAM_NOT_AUTHORIZED (153)
-     - #ERR_PUBLISH_STREAM_INTERNAL_SERVER_ERROR (154)
-     - #ERR_PUBLISH_STREAM_FORMAT_NOT_SUPPORTED (156)
-     */
-    virtual void onStreamPublished(const char *url, int error) {
-        (void)url;
-        (void)error;
-    }
-    /** Reports the result of calling the \ref ar::rtc::IRtcEngine::removePublishStreamUrl "removePublishStreamUrl" method. (CDN live only.)
+   @param url The CDN streaming URL.
+   @param error Error code: #ERROR_CODE_TYPE. Main errors include:
+   - #ERR_OK (0): The publishing succeeds.
+   - #ERR_FAILED (1): The publishing fails.
+   - #ERR_INVALID_ARGUMENT (-2): Invalid argument used. If, for example, you did not call \ref agora::rtc::IRtcEngine::setLiveTranscoding "setLiveTranscoding" to configure LiveTranscoding before calling \ref agora::rtc::IRtcEngine::addPublishStreamUrl "addPublishStreamUrl", the SDK reports #ERR_INVALID_ARGUMENT.
+   - #ERR_TIMEDOUT (-10): The publishing timed out.
+   - #ERR_ALREADY_IN_USE (-19): The chosen URL address is already in use for CDN live streaming.
+   - #ERR_ENCRYPTED_STREAM_NOT_ALLOWED_PUBLISH (130): You cannot publish an encrypted stream.
+   - #ERR_PUBLISH_STREAM_CDN_ERROR (151)
+   - #ERR_PUBLISH_STREAM_NUM_REACH_LIMIT (152)
+   - #ERR_PUBLISH_STREAM_NOT_AUTHORIZED (153)
+   - #ERR_PUBLISH_STREAM_INTERNAL_SERVER_ERROR (154)
+   - #ERR_PUBLISH_STREAM_FORMAT_NOT_SUPPORTED (156)
+   */
+  virtual void onStreamPublished(const char* url, int error) {
+    (void)url;
+    (void)error;
+  }
+  /** @deprecated This method is deprecated, use the \ref agora::rtc::IRtcEngineEventHandler::onRtmpStreamingStateChanged "onRtmpStreamingStateChanged" callback instead.
 
-     This callback indicates whether you have successfully removed an RTMP stream from the CDN.
+   Reports the result of calling the \ref agora::rtc::IRtcEngine::removePublishStreamUrl "removePublishStreamUrl" method. (CDN live only.)
 
-     @param url The RTMP URL address.
-     */
+   This callback indicates whether you have successfully removed an RTMP or RTMPS stream from the CDN.
+
+   @param url The CDN streaming URL.
+   */
     virtual void onStreamUnpublished(const char *url) {
         (void)url;
     }
@@ -4626,10 +5524,31 @@ public:
      @param uid The ID of the remote user.
      @param info The `UserInfo` object that contains the user ID and user account of the remote user.
      */
-    virtual void onUserInfoUpdated(uid_t uid, const UserInfo& info) {
-      (void)uid;
-      (void)info;
-    }
+  virtual void onUserInfoUpdated(uid_t uid, const UserInfo& info) {
+    (void)uid;
+    (void)info;
+  }
+  /// @cond
+  /** Reports the result of uploading the SDK log files.
+   *
+   * @since v3.3.0
+   *
+   * After the method call of \ref IRtcEngine::uploadLogFile "uploadLogFile", the SDK triggers this callback to report the
+   * result of uploading the log files. If the upload fails, refer to the `reason` parameter to troubleshoot.
+   *
+   * @param requestId The request ID. This request ID is the same as `requestId` returned by \ref IRtcEngine::uploadLogFile "uploadLogFile",
+   * and you can use `requestId` to match a specific upload with a callback.
+   * @param success Whether the log files are successfully uploaded.
+   * - true: Successfully uploads the log files.
+   * - false: Fails to upload the log files. For details, see the `reason` parameter.
+   * @param reason The reason for the upload failure. See #UPLOAD_ERROR_REASON.
+   */
+  virtual void onUploadLogResult(const char* requestId, bool success, UPLOAD_ERROR_REASON reason) {
+    (void)requestId;
+    (void)success;
+    (void)reason;
+  }
+  /// @endcond
 };
 
 /**
@@ -4787,7 +5706,21 @@ public:
      */
     virtual int setDevice(const char deviceId[MAX_DEVICE_ID_LENGTH]) = 0;
 
-    /** Sets the volume of the application.
+  /**
+   * Gets the default audio device of the system.
+   *
+   * @since v3.6.0
+   *
+   * @param deviceName The name of the system default audio device.
+   * @param deviceId The device ID of the the system default audio device.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int getDefaultDevice(char deviceName[MAX_DEVICE_ID_LENGTH], char deviceId[MAX_DEVICE_ID_LENGTH]) = 0;
+
+  /** Sets the volume of the application.
 
     @param volume Application volume. The value ranges between 0 (lowest volume) and 255 (highest volume).
     @return
@@ -4891,19 +5824,58 @@ public:
      */
     virtual int setRecordingDevice(const char deviceId[MAX_DEVICE_ID_LENGTH]) = 0;
 
-    /** Starts the audio playback device test.
+  /**
+   * Sets the audio playback device used by the SDK to follow the system default audio playback device.
+   *
+   * @since v3.6.0
+   *
+   * @param enable Whether to follow the system default audio playback device:
+   * - true: Follow. The SDK immediately switches the audio playback device when the system default audio playback device changes.
+   * - false: Do not follow. The SDK switches the audio playback device to the system default audio playback device only when the currently used audio playback device is disconnected.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int followSystemPlaybackDevice(bool enable) = 0;
 
-     This method tests if the playback device works properly. In the test, the SDK plays an audio file specified by the user. If the user can hear the audio, the playback device works properly.
+  /**
+   * Sets the audio recording device used by the SDK to follow the system default audio recording device.
+   *
+   * @since v3.6.0
+   *
+   * @param enable Whether to follow the system default audio recording device:
+   * - true: Follow. The SDK immediately switches the audio recording device when the system default audio recording device changes.
+   * - false: Do not follow. The SDK switches the audio recording device to the system default audio recording device only when the currently used audio recording device is disconnected.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int followSystemRecordingDevice(bool enable) = 0;
 
-     @param testAudioFilePath Pointer to the path of the audio file for the audio playback device test in UTF-8:
-     - Supported file formats: wav, mp3, m4a, and aac.
-     - Supported file sample rates: 8000, 16000, 32000, 44100, and 48000 Hz.
-
-     @return
-     - 0: Success, and you can hear the sound of the specified audio file.
-     - < 0: Failure.
-     */
-    virtual int startPlaybackDeviceTest(const char* testAudioFilePath) = 0;
+  /** Starts the audio playback device test.
+   *
+   * This method tests if the audio playback device works properly. Once a user starts the test, the SDK plays an
+   * audio file specified by the user. If the user can hear the audio, the playback device works properly.
+   *
+   * After calling this method, the SDK triggers the
+   * \ref IRtcEngineEventHandler::onAudioVolumeIndication "onAudioVolumeIndication" callback every 100 ms, which
+   * reports `uid = 1` and the volume of the playback device.
+   *
+   * @note
+   * - Call this method before joining a channel.
+   * - This method is for Windows and macOS only.
+   *
+   * @param testAudioFilePath Pointer to the path of the audio file for the audio playback device test in UTF-8:
+   * - Supported file formats: wav, mp3, m4a, and aac.
+   * - Supported file sample rates: 8000, 16000, 32000, 44100, and 48000 Hz.
+   *
+   * @return
+   * - 0: Success, and you can hear the sound of the specified audio file.
+   * - < 0: Failure.
+   */
+  virtual int startPlaybackDeviceTest(const char* testAudioFilePath) = 0;
 
     /** Stops the audio playback device test.
 
@@ -4935,14 +5907,16 @@ public:
 
     /** Sets the volume of the microphone.
 
-     @param volume Sets the volume of the microphone. The value ranges between 0 (lowest volume) and 255 (highest volume).
-     @return
-     - 0: Success.
-     - < 0: Failure.
-     */
-    virtual int setRecordingDeviceVolume(int volume) = 0;
+   @note Ensure that you call this method after joining a channel.
 
-    /** Retrieves the volume of the microphone.
+   @param volume Sets the volume of the microphone. The value ranges between 0 (lowest volume) and 255 (highest volume).
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int setRecordingDeviceVolume(int volume) = 0;
+
+  /** Gets the volume of the microphone.
 
      @param volume Pointer to the microphone volume. The volume value ranges between 0 (lowest volume) and 255 (highest volume).
      @return
@@ -5095,12 +6069,12 @@ struct LogConfig
     /** The absolute path of log files.
      *
      * The default file path is:
-     * - Android: `/storage/emulated/0/Android/data/<package name>/files/agorasdk.log`
-     * - iOS: `App Sandbox/Library/caches/agorasdk.log`
+     * - Android: `/storage/emulated/0/Android/data/<package name>/files/ar_sdk.log`
+     * - iOS: `App Sandbox/Library/caches/ar_sdk.log`
      * - macOS:
-     *  - Sandbox enabled: `App Sandbox/Library/Logs/agorasdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/agorasdk.log`.
-     *  - Sandbox disabled: `～/Library/Logs/agorasdk.log`.
-     * - Windows: `C:\Users\<user_name>\AppData\Local\AR\<process_name>\agorasdk.log`
+     *  - Sandbox enabled: `App Sandbox/Library/Logs/ar_sdk.log`, such as `/Users/<username>/Library/Containers/<App Bundle Identifier>/Data/Library/Logs/ar_sdk.log`.
+     *  - Sandbox disabled: `～/Library/Logs/ar_sdk.log`.
+     * - Windows: `C:\Users\<user_name>\AppData\Local\AR\<process_name>\ar_sdk.log`
      *
      * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
      */
@@ -5148,10 +6122,10 @@ struct RtcEngineContext
      *
      * @since v3.3.0
      *
-     * By default, the SDK outputs five log files, `agorasdk.log`, `agorasdk_1.log`, `agorasdk_2.log`, `agorasdk_3.log`, `agorasdk_4.log`, each with
-     * a default size of 1024 KB. These log files are encoded in UTF-8. The SDK writes the latest logs in `agorasdk.log`. When `agorasdk.log` is
-     * full, the SDK deletes the log file with the earliest modification time among the other four, renames `agorasdk.log` to the name of the
-     * deleted log file, and creates a new `agorasdk.log` to record latest logs.
+     * By default, the SDK outputs five log files, `ar_sdk.log`, `ar_sdk_1.log`, `ar_sdk_2.log`, `ar_sdk_3.log`, `ar_sdk_4.log`, each with
+     * a default size of 1024 KB. These log files are encoded in UTF-8. The SDK writes the latest logs in `ar_sdk.log`. When `ar_sdk.log` is
+     * full, the SDK deletes the log file with the earliest modification time among the other four, renames `ar_sdk.log` to the name of the
+     * deleted log file, and creates a new `ar_sdk.log` to record latest logs.
      *
      */
     LogConfig logConfig;
@@ -5236,65 +6210,260 @@ public:
 
 /** Encryption mode.
 */
-enum ENCRYPTION_MODE
-{
-    /** 1: (Default) 128-bit AES encryption, XTS mode.
-     */
-    AES_128_XTS = 1,
-    /** 2: 128-bit AES encryption, ECB mode.
-     */
-    AES_128_ECB = 2,
-    /** 3: 256-bit AES encryption, XTS mode.
-     */
-    AES_256_XTS = 3,
-    /** 4: 128-bit SM4 encryption, ECB mode.
-     */
-    SM4_128_ECB = 4,
-    /** Enumerator boundary.
-     */
-    MODE_END,
+enum ENCRYPTION_MODE {
+  /** 1: 128-bit AES encryption, XTS mode.
+   */
+  AES_128_XTS = 1,
+  /** 2: 128-bit AES encryption, ECB mode.
+   */
+  AES_128_ECB = 2,
+  /** 3: 256-bit AES encryption, XTS mode.
+   */
+  AES_256_XTS = 3,
+  /// @cond
+  /** 4: 128-bit SM4 encryption, ECB mode.
+   */
+  SM4_128_ECB = 4,
+  /// @endcond
+  /** 5: 128-bit AES encryption, GCM mode.
+   *
+   * @since v3.3.1
+   */
+  AES_128_GCM = 5,
+  /** 6: 256-bit AES encryption, GCM mode.
+   *
+   * @since v3.3.1
+   */
+  AES_256_GCM = 6,
+  /** 7: (Default) 128-bit AES encryption, GCM mode. Compared to `AES_128_GCM` encryption mode,
+   * `AES_128_GCM2` encryption mode is more secure and requires you to set the salt (`encryptionKdfSalt`).
+   *
+   * @since v3.4.5
+   */
+  AES_128_GCM2 = 7,
+  /** 8: 256-bit AES encryption, GCM mode. Compared to `AES_256_GCM` encryption mode,
+   * `AES_256_GCM2` encryption mode is more secure and requires you to set the salt (`encryptionKdfSalt`).
+   *
+   * @since v3.4.5
+   */
+  AES_256_GCM2 = 8,
+  /** Enumerator boundary.
+   */
+  MODE_END,
 };
 
 /** Configurations of built-in encryption schemas. */
-struct EncryptionConfig{
-    /**
-     * Encryption mode. The default encryption mode is `AES_128_XTS`. See #ENCRYPTION_MODE.
-     */
-    ENCRYPTION_MODE encryptionMode;
-    /**
-     * Encryption key in string type.
-     *
-     * @note If you do not set an encryption key or set it as NULL, you cannot use the built-in encryption, and the SDK returns #ERR_INVALID_ARGUMENT (-2).
-     */
-    const char* encryptionKey;
+struct EncryptionConfig {
+  /**
+   * Encryption mode. The default encryption mode is `AES_128_GCM2`. See #ENCRYPTION_MODE.
+   */
+  ENCRYPTION_MODE encryptionMode;
+  /**
+   * Encryption key in string type with unlimited length. AR recommends using a 32-byte key.
+   *
+   * @note If you do not set an encryption key or set it as NULL, you cannot use the built-in encryption, and the SDK returns #ERR_INVALID_ARGUMENT (-2).
+   */
+  const char* encryptionKey;
+  /**
+   * The salt with the length of 32 bytes. AR recommends using OpenSSL to generate the salt on your server.
+   * For details, see *Media Stream Encryption*.
+   *
+   * @note This parameter is only valid when you set the encryption mode as `AES_128_GCM2` or `AES_256_GCM2`.
+   * In this case, ensure that this parameter is not `0`.
+   *
+   * @since v3.4.5
+   */
+  uint8_t encryptionKdfSalt[32];
 
-    EncryptionConfig() {
-        encryptionMode = AES_128_XTS;
-        encryptionKey = nullptr;
-    }
+  EncryptionConfig() {
+    encryptionMode = AES_128_GCM2;
+    encryptionKey = nullptr;
+    memset(encryptionKdfSalt, 0, sizeof(encryptionKdfSalt));
+  }
 
-    /// @cond
-    const char* getEncryptionString() const {
-        switch(encryptionMode)
-        {
-            case AES_128_XTS:
-                return "aes-128-xts";
-            case AES_128_ECB:
-                return "aes-128-ecb";
-            case AES_256_XTS:
-                return "aes-256-xts";
-            case SM4_128_ECB:
-                return "sm4-128-ecb";
-            default:
-                return "aes-128-xts";
-        }
+  /// @cond
+  const char* getEncryptionString() const {
+    switch (encryptionMode) {
+      case AES_128_XTS:
         return "aes-128-xts";
+      case AES_128_ECB:
+        return "aes-128-ecb";
+      case AES_256_XTS:
+        return "aes-256-xts";
+      case SM4_128_ECB:
+        return "sm4-128-ecb";
+      case AES_128_GCM:
+        return "aes-128-gcm";
+      case AES_256_GCM:
+        return "aes-256-gcm";
+      case AES_128_GCM2:
+        return "aes-128-gcm-2";
+      case AES_256_GCM2:
+        return "aes-256-gcm-2";
+      default:
+        return "aes-128-gcm-2";
     }
-    /// @endcond
+    return "aes-128-gcm-2";
+  }
+  /// @endcond
 };
 
-/** IRtcEngine is the base interface class of the AR SDK that provides the main AR SDK methods invoked by your application.
+/** The channel media options.
+ */
+struct ChannelMediaOptions {
+  /** Determines whether to automatically subscribe to all remote audio streams when the user joins a channel:
+   - true: (Default) Subscribe.
+   - false: Do not subscribe.
 
+   This member serves a similar function to the `muteAllRemoteAudioStreams` method. After joining the channel,
+   you can call the `muteAllRemoteAudioStreams` method to set whether to subscribe to audio streams in the channel.
+   */
+  bool autoSubscribeAudio;
+  /** Determines whether to subscribe to video streams when the user joins the channel:
+   - true: (Default) Subscribe.
+   - false: Do not subscribe.
+
+   This member serves a similar function to the `muteAllRemoteVideoStreams` method. After joining the channel,
+   you can call the `muteAllRemoteVideoStreams` method to set whether to subscribe to video streams in the channel.
+   */
+  bool autoSubscribeVideo;
+  /** Determines whether to publish the local audio stream when the user joins a channel:
+   * - true: (Default) Publish.
+   * - false: Do not publish.
+   *
+   * This member serves a similar function to the `muteLocalAudioStream` method. After the user joins
+   * the channel, you can call the `muteLocalAudioStream` method to set whether to publish the
+   * local audio stream in the channel.
+   *
+   * @since v3.4.5
+   */
+  bool publishLocalAudio;
+  /** Determines whether to publish the local video stream when the user joins a channel:
+   * - true: (Default) Publish.
+   * - false: Do not publish.
+   *
+   * This member serves a similar function to the `muteLocalVideoStream` method. After the user joins
+   * the channel, you can call the `muteLocalVideoStream` method to set whether to publish the
+   * local video stream in the channel.
+   */
+  bool publishLocalVideo;
+  ChannelMediaOptions() : autoSubscribeAudio(true), autoSubscribeVideo(true), publishLocalAudio(true), publishLocalVideo(true) {}
+};
+/**
+ * @since v3.5.0
+ *
+ * The IVideoSink class, which can set up a custom video renderer.
+ *
+ * During a real-time audio and video interaction, the AR SDK enables the default renderer to render local and
+ * remote video. The IVideoSink class can customize the video renderer. You can implement this interface first, and
+ * then customize the video renderer that you want by calling
+ * \ref IRtcEngine::setLocalVideoRenderer "setLocalVideoRenderer" or
+ * \ref IRtcEngine::setRemoteVideoRenderer "setRemoteVideoRenderer".
+ */
+class IVideoSink {
+ public:
+  /**
+   * Notification for initializing the custom video renderer.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback to remind you to initialize the custom video renderer.
+   * After receiving this callback, you can do some preparation, and then use the return value to tell the SDK
+   * whether the custom video renderer is prepared. The SDK takes the corresponding behavior based on the return value.
+   *
+   * @return
+   * - true: The custom video renderer is initialized. The SDK is ready to send the video data to be rendered.
+   * - false: The custom video renderer is not ready or fails to initialize. The SDK reports the error.
+   */
+  virtual bool onInitialize() = 0;
+  /**
+   * Notification for starting the custom video source.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback to remind you to start the custom video source for capturing video. After receiving
+   * this callback, you can do some preparation, and then use the return value to tell the SDK whether the custom video
+   * renderer is started. The SDK takes the corresponding behavior based on the return value.
+   *
+   * @return
+   * - true: The custom video renderer is started. The SDK is ready to send the video data to be rendered to the custom video renderer for rendering.
+   * - false: The custom video renderer is not ready or fails to initialize. The SDK stops and reports the error.
+   */
+  virtual bool onStart() = 0;
+  /**
+   * Notification for stopping rendering the video.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback to remind you to stop rendering the video. This callback informs you that the SDK
+   * is about to stop sending video data to the custom video renderer.
+   */
+  virtual void onStop() = 0;
+  /**
+   * Notification for disabling the custom video renderer.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback to remind you to disable the custom video renderer.
+   */
+  virtual void onDispose() = 0;
+  /**
+   * Gets the video frame type.
+   *
+   * @since v3.5.0
+   *
+   * Before you initialize the custom video renderer, the SDK triggers this callback to query the data type of the
+   * video frame that you want to process. You must specify the data type of the video frame in the return value of
+   * this callback and then pass it to the SDK.
+   *
+   * @return \ref AM::ExternalVideoFrame::VIDEO_BUFFER_TYPE "VIDEO_BUFFER_TYPE"
+   */
+  virtual AM::ExternalVideoFrame::VIDEO_BUFFER_TYPE getBufferType() = 0;
+  /**
+   * Gets the video frame pixel format.
+   *
+   * @since v3.5.0
+   *
+   * Before you initialize the custom video renderer, the SDK triggers this callback to query the pixel format of the
+   * video frame that you want to process. You must specify a pixel format for the video frame in the return value of
+   * this callback and then pass it to the SDK.
+   *
+   * @return \ref AM::ExternalVideoFrame::VIDEO_PIXEL_FORMAT "VIDEO_PIXEL_FORMAT"
+   */
+  virtual AM::ExternalVideoFrame::VIDEO_PIXEL_FORMAT getPixelFormat() = 0;
+#if (defined(__APPLE__) && TARGET_OS_IOS)
+  /**
+   * Notification for rendering the video in the pixel data type.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback after capturing video in the pixel data type to alter the custom video renderer
+   * to process the video data.
+   *
+   * @note This method applies to iOS only.
+   *
+   * @param pixelBuffer The video data in the pixel data type.
+   * @param rotation The clockwise rotation angle of the video.
+   */
+  virtual void onRenderPixelBuffer(CVPixelBufferRef pixelBuffer, int rotation) = 0;
+#endif
+  /**
+   * Notification for rendering the video in the raw data type.
+   *
+   * @since v3.5.0
+   *
+   * The SDK triggers this callback after capturing video in the raw data type to alter the custom video renderer to
+   * process the video data.
+   *
+   * @param rawData The video data in the raw data type.
+   * @param width The width (px) of the video.
+   * @param height The height (px) of the video.
+   * @param rotation The clockwise rotation angle of the video.
+   */
+  virtual void onRenderRawData(uint8_t* rawData, int width, int height, int rotation) = 0;
+};
+/** IRtcEngine is the base interface class of the AR SDK that provides the main AR SDK methods
+invoked by your application.
 Enable the AR SDK's communication functionality through the creation of an IRtcEngine object, then call the methods of this object.
  */
 class IRtcEngine
@@ -5438,7 +6607,7 @@ public:
 	 - 空格(The space character).
 	 - 特殊字符(Punctuation characters and other symbols, including): "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
 	 @param info (非必选项) 开发者需加入的任何附加信息。一般可设置为空字符串，或频道相关信息。该信息不会传递给频道内的其他用户.
-	 @param uid (非必选项) 用户 ID，最多32位字符串，并保证唯一性。如果不指定（即设为NULL或空字符串），SDK 会自动分配一个，并在 onJoinChannelSuccess 回调方法中返回，App 层必须记住该返回值并维护，SDK 不对该返回值进行维护.
+	 @param uid (非必选项) 用户 ID，最多64位字符串，并保证唯一性，规则同 channelId 一致。如果不指定（即设为NULL或空字符串），SDK 会自动分配一个，并在 onJoinChannelSuccess 回调方法中返回，App 层必须记住该返回值并维护，SDK 不对该返回值进行维护.
 
 	 @返回
 		- 0(ERR_OK): 方法调用成功。
@@ -5693,24 +6862,54 @@ public:
      */
     virtual int stopEchoTest() = 0;
 
-    /** Enables the video module.
-
-     Call this method either before joining a channel or during a call. If this method is called before joining a channel, the call starts in the video mode. If this method is called during an audio call, the audio mode switches to the video mode. To disable the video module, call the \ref IRtcEngine::disableVideo "disableVideo" method.
-
-     A successful \ref ar::rtc::IRtcEngine::enableVideo "enableVideo" method call triggers the \ref ar::rtc::IRtcEngineEventHandler::onUserEnableVideo "onUserEnableVideo" (true) callback on the remote client.
-     @note
-     - This method affects the internal engine and can be called after the \ref ar::rtc::IRtcEngine::leaveChannel "leaveChannel" method.
-     - This method resets the internal engine and takes some time to take effect. We recommend using the following API methods to control the video engine modules separately:
-         - \ref IRtcEngine::enableLocalVideo "enableLocalVideo": Whether to enable the camera to create the local video stream.
-         - \ref IRtcEngine::muteLocalVideoStream "muteLocalVideoStream": Whether to publish the local video stream.
-         - \ref IRtcEngine::muteRemoteVideoStream "muteRemoteVideoStream": Whether to subscribe to and play the remote video stream.
-         - \ref IRtcEngine::muteAllRemoteVideoStreams "muteAllRemoteVideoStreams": Whether to subscribe to and play all remote video streams.
-
-     @return
-     - 0: Success.
-     - < 0: Failure.
-     */
-    virtual int enableVideo() = 0;
+  /** Sets the AR cloud proxy service.
+   *
+   * @since v3.3.0
+   *
+   * When the user's firewall restricts the IP address and port, refer to *Use Cloud Proxy* to add the specific
+   * IP addresses and ports to the firewall whitelist; then, call this method to enable the cloud proxy and set
+   * the `proxyType` parameter as `UDP_PROXY(1)`, which is the cloud proxy for the UDP protocol.
+   *
+   * After a successfully cloud proxy connection, the SDK triggers
+   * the \ref IRtcEngineEventHandler::onConnectionStateChanged "onConnectionStateChanged" (CONNECTION_STATE_CONNECTING, CONNECTION_CHANGED_SETTING_PROXY_SERVER) callback.
+   *
+   * To disable the cloud proxy that has been set, call `setCloudProxy(NONE_PROXY)`. To change the cloud proxy type that has been set,
+   * call `setCloudProxy(NONE_PROXY)` first, and then call `setCloudProxy`, and pass the value that you expect in `proxyType`.
+   *
+   * @note
+   * - AR recommends that you call this method before joining the channel or after leaving the channel.
+   * - For the SDK v3.3.x, the services for pushing streams to CDN and co-hosting across channels are not available
+   * when you use the cloud proxy for the UDP protocol. For the SDK v3.4.0 and later, the services for pushing streams
+   * to CDN and co-hosting across channels are not available when the user is in a network environment with a firewall
+   * and uses the cloud proxy for the UDP protocol.
+   *
+   * @param proxyType The cloud proxy type, see #CLOUD_PROXY_TYPE. This parameter is required, and the SDK reports an error if you do not pass in a value.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   *  - `-2(ERR_INVALID_ARGUMENT)`: The parameter is invalid.
+   *  - `-7(ERR_NOT_INITIALIZED)`: The SDK is not initialized.
+   */
+  virtual int setCloudProxy(CLOUD_PROXY_TYPE proxyType) = 0;
+  /** Enables the video module.
+   *
+   * Call this method either before joining a channel or during a call. If this method is called before joining a channel, the call starts in the video mode. If this method is called during an audio call, the audio mode switches to the video mode. To disable the video module, call the \ref IRtcEngine::disableVideo "disableVideo" method.
+   *
+   * A successful \ref agora::rtc::IRtcEngine::enableVideo "enableVideo" method call triggers the \ref agora::rtc::IRtcEngineEventHandler::onUserEnableVideo "onUserEnableVideo" (true) callback on the remote client.
+   * @note
+   * - This method affects the internal engine and can be called after the \ref agora::rtc::IRtcEngine::leaveChannel "leaveChannel" method.
+   * - This method resets the internal engine and takes some time to take effect. We recommend using the following API methods to control the video engine modules separately:
+   *     - \ref IRtcEngine::enableLocalVideo "enableLocalVideo": Whether to enable the camera to create the local video stream.
+   *     - \ref IRtcEngine::muteLocalVideoStream "muteLocalVideoStream": Whether to publish the local video stream.
+   *     - \ref IRtcEngine::muteRemoteVideoStream "muteRemoteVideoStream": Whether to subscribe to and play the remote video stream.
+   *     - \ref IRtcEngine::muteAllRemoteVideoStreams "muteAllRemoteVideoStreams": Whether to subscribe to and play all remote video streams.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int enableVideo() = 0;
 
     /** Disables the video module.
 
@@ -6219,25 +7418,164 @@ public:
      - < 0: Failure.
      */
 	virtual int startAudioMixing(const char* filePath, bool loopback, bool replace, int cycle) = 0;
-    /** Stops playing and mixing the music file.
+	/**
+   * Starts playing and mixing the music file.
+   *
+   * @since v3.4.0
+   *
+   * This method supports mixing or replacing local or online music file and
+   * audio collected by a microphone. After successfully playing the music
+   * file, the SDK triggers
+   * \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" (AUDIO_MIXING_STATE_PLAYING,AUDIO_MIXING_REASON_STARTED_BY_USER).
+   * After completing playing the music file, the SDK triggers
+   * `onAudioMixingStateChanged(AUDIO_MIXING_STATE_STOPPED,AUDIO_MIXING_REASON_ALL_LOOPS_COMPLETED)`.
+   *
+   * @note
+   * - If you need to call
+   * \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" multiple times,
+   * ensure that the call interval is longer than 500 ms.
+   * - If the local music file does not exist, or if the SDK does not support
+   * the file format or cannot access the music file URL, the SDK returns
+   * #WARN_AUDIO_MIXING_OPEN_ERROR (701).
+   * - On Android:
+   *  - To use this method, ensure that the Android device is v4.2 or later
+   * and the API version is v16 or later.
+   *  - If you need to play an online music file, AR does not recommend
+   * using the redirected URL address. Some Android devices may fail to open a redirected URL address.
+   *  - If you call this method on an emulator, ensure that the music file is
+   * in the `/sdcard/` directory and the format is MP3.
+   * - To avoid blocking, as of v3.4.5, this method changes from a synchronous call to an asynchronous call.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @param filePath The absolute path or URL address (including the filename extensions)
+   * of the music file. For example: `C:\music\audio.mp4`.
+   * When you access a local file on Android, AR recommends passing a URI address or the path starts
+   * with `/assets/` in this parameter.
+   * @param loopback Whether to only play the music file on the local client:
+   * - true: Only play the music file on the local client so that only the local
+   * user can hear the music.
+   * - false: Publish the music file to remote clients so that both the local
+   * user and remote users can hear the music.
+   * @param replace Whether to replace the audio collected by the microphone
+   * with a music file:
+   * - true: Replace. Users can only hear music.
+   * - false: Do not replace. Users can hear both music and audio collected by
+   * the microphone.
+   * @param cycle The number of times the music file plays.
+   * - &ge; 0: The number of playback times. For example, `0` means that the
+   * SDK does not play the music file, while `1` means that the SDK plays the
+   * music file once.
+   * - `-1`: Play the music in an indefinite loop.
+   * @param startPos The playback position (ms) of the music file.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int startAudioMixing(const char* filePath, bool loopback, bool replace, int cycle, int startPos) = 0;
+  /**
+   * Sets the playback speed of the current music file.
+   *
+   * @since v3.5.1
+   *
+   * @note Call this method after calling \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" [2/2]
+   * and receiving the \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" (AUDIO_MIXING_STATE_PLAYING) callback.
+   *
+   * @param speed The playback speed. AR recommends that you limit this value to between 50 and 400, defined as follows:
+   * - 50: Half the original speed.
+   * - 100: The original speed.
+   * - 400: 4 times the original speed.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setAudioMixingPlaybackSpeed(int speed) = 0;
+  /** Stops playing and mixing the music file.
 
-     Call this method when you are in a channel.
+   Call this method when you are in a channel.
 
-     @return
-     - 0: Success.
-     - < 0: Failure.
-     */
-	virtual int stopAudioMixing() = 0;
-    /** Pauses playing and mixing the music file.
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int stopAudioMixing() = 0;
+  /** Pauses playing and mixing the music file.
 
-     Call this method when you are in a channel.
+   Call this method when you are in a channel.
 
-     @return
-     - 0: Success.
-     - < 0: Failure.
-     */
-	virtual int pauseAudioMixing() = 0;
-    /** Resumes playing and mixing the music file.
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int pauseAudioMixing() = 0;
+  /**
+   * Specifies the playback track of the current music file.
+   *
+   * @since v3.5.1
+   *
+   * After getting the audio track index of the current music file, call this
+   * method to specify any audio track to play. For example, if different tracks
+   * of a multitrack file store songs in different languages, you can call this
+   * method to set the language of the music file to play.
+   *
+   * @note
+   * - This method is for Android, iOS, and Windows only.
+   * - Call this method after calling \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" [2/2]
+   * and receiving the \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" (AUDIO_MIXING_STATE_PLAYING) callback.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @param index The specified playback track. This parameter must be less than or equal to the return value
+   * of \ref IRtcEngine::getAudioTrackCount "getAudioTrackCount".
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int selectAudioTrack(int index) = 0;
+  /**
+   * Gets the audio track index of the current music file.
+   *
+   * @since v3.5.1
+   *
+   * @note
+   * - This method is for Android, iOS, and Windows only.
+   * - Call this method after calling \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" [2/2]
+   * and receiving the \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" (AUDIO_MIXING_STATE_PLAYING) callback.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @return
+   * - ≥ 0: The audio track index of the current music file, if this method call succeeds.
+   * - < 0: Failure.
+   */
+  virtual int getAudioTrackCount() = 0;
+  /**
+   * Sets the channel mode of the current music file.
+   *
+   * @since v3.5.1
+   *
+   * In a stereo music file, the left and right channels can store different audio data.
+   * According to your needs, you can set the channel mode to original mode, left channel mode,
+   * right channel mode, or mixed channel mode. For example, in the KTV scenario, the left
+   * channel of the music file stores the musical accompaniment, and the right channel
+   * stores the singing voice. If you only need to listen to the accompaniment, call this
+   * method to set the channel mode of the music file to left channel mode; if you need to
+   * listen to the accompaniment and the singing voice at the same time, call this method
+   * to set the channel mode to mixed channel mode.
+   *
+   * @note
+   * - Call this method after calling \ref IRtcEngine::startAudioMixing(const char*,bool,bool,int,int) "startAudioMixing" [2/2]
+   * and receiving the \ref IRtcEngineEventHandler::onAudioMixingStateChanged "onAudioMixingStateChanged" (AUDIO_MIXING_STATE_PLAYING) callback.
+   * - This method only applies to stereo audio files.
+   *
+   * @param mode The channel mode. See \ref AM::AUDIO_MIXING_DUAL_MONO_MODE "AUDIO_MIXING_DUAL_MONO_MODE".
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setAudioMixingDualMonoMode(AM::AUDIO_MIXING_DUAL_MONO_MODE mode) = 0;
+  /** Resumes playing and mixing the music file.
 
      Call this method when you are in a channel.
 
@@ -6452,6 +7790,62 @@ public:
      - < 0: Failure.
      */
 	virtual int playEffect(int soundId, const char* filePath, int loopCount, double pitch, double pan, int gain, bool publish = false) = 0;
+	/**
+   * Plays a specified local or online audio effect file.
+   *
+   * @since v3.4.0
+   *
+   * To play multiple audio effect files at the same time, call this method
+   * multiple times with different `soundId` and `filePath` values. For the
+   * best user experience, AR recommends playing no more than three audio
+   * effect files at the same time.
+   *
+   * After completing playing an audio effect file, the SDK triggers the
+   * \ref IRtcEngineEventHandler::onAudioEffectFinished "onAudioEffectFinished"
+   * callback.
+   *
+   * @note
+   * - Call this method after joining a channel.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @param soundId Audio effect ID. The ID of each audio effect file is
+   * unique. If you preloaded an audio effect into memory by calling
+   * \ref IRtcEngine::preloadEffect "preloadEffect", ensure that this
+   * parameter is set to the same value as in `preloadEffect`.
+   * @param filePath The absolute path or URL address (including the filename extensions)
+   * of the music file. For example: `C:\music\audio.mp4`.
+   * If you preloaded an audio effect into memory by calling
+   * \ref IRtcEngine::preloadEffect "preloadEffect", ensure that this
+   * parameter is set to the same value as in `preloadEffect`.
+   * When you access a local file on Android, AR recommends passing a URI address or the path starts
+   * with `/assets/` in this parameter.
+   *
+   * @param loopCount The number of times the audio effect loops:
+   * - &ge; 0: The number of loops. For example, `1` means loop one time,
+   * which means play the audio effect two times in total.
+   * - `-1`: Play the audio effect in an indefinite loop.
+   * @param pitch The pitch of the audio effect. The range is 0.5 to 2.0.
+   * The default value is 1.0, which means the original pitch. The lower the
+   * value, the lower the pitch.
+   * @param pan The spatial position of the audio effect. The range is `-1.0`
+   * to `1.0`. For example:
+   * - `-1.0`: The audio effect occurs on the left.
+   * - `0.0`: The audio effect occurs in the front.
+   * - `1.0`: The audio effect occurs on the right.
+   * @param gain The volume of the audio effect. The range is 0.0 to 100.0.
+   * The default value is 100.0, which means the original volume. The smaller
+   * the value, the less the gain.
+   * @param publish Whether to publish the audio effect to the remote users:
+   * - true: Publish. Both the local user and remote users can hear the audio
+   * effect.
+   * - false: Do not publish. Only the local user can hear the audio effect.
+   * @param startPos The playback position (ms) of the audio effect file.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int playEffect(int soundId, const char* filePath, int loopCount, double pitch, double pan, int gain, bool publish, int startPos) = 0;
     /** Stops playing a specified audio effect.
 
      @param soundId ID of the audio effect to stop playing. Each audio effect has a unique ID.
@@ -6518,12 +7912,147 @@ public:
 	virtual int resumeEffect(int soundId) = 0;
     /** Resumes playing all audio effects.
 
-     @return
-     - 0: Success.
-     - < 0: Failure.
-     */
-	virtual int resumeAllEffects() = 0;
-    /** Enables/Disables stereo panning for remote users.
+   @return
+   - 0: Success.
+   - < 0: Failure.
+   */
+  virtual int resumeAllEffects() = 0;
+  /**
+   * Gets the duration of the audio effect file.
+   *
+   * @since v3.4.0
+   *
+   * @note
+   * - Call this method after joining a channel.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @param filePath The absolute path or URL address (including the filename extensions)
+   * of the music file. For example: `C:\music\audio.mp4`.
+   * When you access a local file on Android, AR recommends passing a URI address or the path starts
+   * with `/assets/` in this parameter.
+   *
+   * @return
+   * - &ge; 0: A successful method call. Returns the total duration (ms) of
+   * the specified audio effect file.
+   * - < 0: Failure.
+   *  - `-22(ERR_RESOURCE_LIMITED)`: Cannot find the audio effect file. Please
+   * set a correct `filePath`.
+   */
+  virtual int getEffectDuration(const char* filePath) = 0;
+  /**
+   * Sets the playback position of an audio effect file.
+   *
+   * @since v3.4.0
+   *
+   * After a successful setting, the local audio effect file starts playing at the specified position.
+   *
+   * @note Call this method after \ref IRtcEngine::playEffect(int,const char*,int,double,double,int,bool,int) "playEffect" .
+   *
+   * @param soundId Audio effect ID. Ensure that this parameter is set to the
+   * same value as in \ref IRtcEngine::playEffect(int,const char*,int,double,double,int,bool,int) "playEffect" .
+   * @param pos The playback position (ms) of the audio effect file.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   *  - `-22(ERR_RESOURCE_LIMITED)`: Cannot find the audio effect file. Please
+   * set a correct `soundId`.
+   */
+  virtual int setEffectPosition(int soundId, int pos) = 0;
+  /**
+   * Gets the playback position of the audio effect file.
+   *
+   * @since v3.4.0
+   *
+   * @note Call this method after \ref IRtcEngine::playEffect(int,const char*,int,double,double,int,bool,int) "playEffect" .
+   *
+   * @param soundId Audio effect ID. Ensure that this parameter is set to the
+   * same value as in \ref IRtcEngine::playEffect(int,const char*,int,double,double,int,bool,int) "playEffect" .
+   *
+   * @return
+   * - &ge; 0: A successful method call. Returns the playback position (ms) of
+   * the specified audio effect file.
+   * - < 0: Failure.
+   *  - `-22(ERR_RESOURCE_LIMITED)`: Cannot find the audio effect file. Please
+   * set a correct `soundId`.
+   */
+  virtual int getEffectCurrentPosition(int soundId) = 0;
+
+  /** Gets the information of a specified audio file.
+   *
+   * @since v3.5.1
+   *
+   * After calling this method successfully, the SDK triggers the
+   * \ref IRtcEngineEventHandler::onRequestAudioFileInfo "onRequestAudioFileInfo"
+   * callback to report the information of an audio file, such as audio duration.
+   * You can call this method multiple times to get the information of multiple audio files.
+   *
+   * @note
+   * - Call this method after joining a channel.
+   * - For the audio file formats supported by this method, see [What formats of audio files does the AR RTC SDK support](https://docs.agora.io/en/faq/audio_format).
+   *
+   * @param filePath The file path:
+   * - Windows: The absolute path or URL address (including the filename extensions) of
+   * the audio file. For example: `C:\music\audio.mp4`.
+   * - Android: The file path, including the filename extensions. To access an online file,
+   * AR supports using a URL address; to access a local file, AR supports using a URI
+   * address, an absolute path, or a path that starts with `/assets/`. You might encounter
+   * permission issues if you use an absolute path to access a local file, so AR recommends
+   * using a URI address instead. For example: `content://com.android.providers.media.documents/document/audio%3A14441`.
+   * - iOS or macOS: The absolute path or URL address (including the filename extensions) of the audio file.
+   * For example: `/var/mobile/Containers/Data/audio.mp4`.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int getAudioFileInfo(const char* filePath) = 0;
+
+  /** Enables or disables deep-learning noise reduction.
+   *
+   * @since v3.3.0
+   *
+   * The SDK enables traditional noise reduction mode by default to reduce most of the stationary background noise.
+   * If you need to reduce most of the non-stationary background noise, AR recommends enabling deep-learning
+   * noise reduction as follows:
+   *
+   * 1. Ensure that the dynamical library is integrated in your project:
+   *  - Android: `libagora_ai_denoise_extension.so`
+   *  - iOS: `AgoraAIDenoiseExtension.xcframework`
+   *  - macOS: `AgoraAIDenoiseExtension.framework`
+   *  - Windows: `libagora_ai_denoise_extension.dll`
+   * 2. Call `enableDeepLearningDenoise(true)`.
+   *
+   * Deep-learning noise reduction requires high-performance devices. For example, the following devices and later
+   * models are known to support deep-learning noise reduction:
+   * - iPhone 6S
+   * - MacBook Pro 2015
+   * - iPad Pro (2nd generation)
+   * - iPad mini (5th generation)
+   * - iPad Air (3rd generation)
+   *
+   * After successfully enabling deep-learning noise reduction, if the SDK detects that the device performance
+   * is not sufficient, it automatically disables deep-learning noise reduction and enables traditional noise reduction.
+   *
+   * If you call `enableDeepLearningDenoise(false)` or the SDK automatically disables deep-learning noise reduction
+   * in the channel, when you need to re-enable deep-learning noise reduction, you need to call \ref IRtcEngine::leaveChannel "leaveChannel"
+   * first, and then call `enableDeepLearningDenoise(true)`.
+   *
+   * @note
+   * - This method dynamically loads the library, so AR recommends calling this method before joining a channel.
+   * - This method works best with the human voice. AR does not recommend using this method for audio containing music.
+   *
+   * @param enable Sets whether to enable deep-learning noise reduction.
+   * - true: (Default) Enables deep-learning noise reduction.
+   * - false: Disables deep-learning noise reduction.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   *  - -157 (ERR_MODULE_NOT_FOUND): The dynamical library for enabling deep-learning noise reduction is not integrated.
+   */
+  virtual int enableDeepLearningDenoise(bool enable) = 0;
+  /** Enables/Disables stereo panning for remote users.
 
      Ensure that you call this method before joinChannel to enable stereo panning for remote users so that the local user can track the position of a remote user by calling \ref ar::rtc::IRtcEngine::setRemoteVoicePosition "setRemoteVoicePosition".
 
@@ -6681,6 +8210,50 @@ public:
      * - < 0: Failure.
      */
     virtual int setAudioEffectPreset(AUDIO_EFFECT_PRESET preset) = 0;
+  /** Sets an SDK preset voice conversion effect.
+   *
+   * @since v3.3.1
+   *
+   * Call this method to set an SDK preset voice conversion effect for the
+   * local user who sends an audio stream. After setting a voice conversion
+   * effect, all users in the channel can hear the effect.
+   *
+   * You can set different voice conversion effects for different scenarios.
+   * See *Set the Voice Effect*.
+   *
+   * To achieve better voice effect quality, AR recommends calling
+   * \ref IRtcEngine::setAudioProfile "setAudioProfile" and setting the
+   * `profile` parameter to #AUDIO_PROFILE_MUSIC_HIGH_QUALITY (4) or
+   * #AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO (5) and the `scenario`
+   * parameter to #AUDIO_SCENARIO_GAME_STREAMING (3) before calling this
+   * method.
+   *
+   * @note
+   * - You can call this method either before or after joining a channel.
+   * - Do not set the `profile` parameter of `setAudioProfile` to
+   * #AUDIO_PROFILE_SPEECH_STANDARD (1) or
+   * #AUDIO_PROFILE_IOT (6); otherwise, this method call does not take effect.
+   * - This method works best with the human voice. AR does not recommend
+   * using this method for audio containing music.
+   * - After calling this method, AR recommends not calling the following
+   * methods, because they can override `setVoiceConversionPreset`:
+   *  - \ref IRtcEngine::setAudioEffectPreset "setAudioEffectPreset"
+   *  - \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters"
+   *  - \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset"
+   *  - \ref IRtcEngine::setVoiceBeautifierParameters "setVoiceBeautifierParameters"
+   *  - \ref IRtcEngine::setLocalVoiceReverbPreset "setLocalVoiceReverbPreset"
+   *  - \ref IRtcEngine::setLocalVoiceChanger "setLocalVoiceChanger"
+   *  - \ref IRtcEngine::setLocalVoicePitch "setLocalVoicePitch"
+   *  - \ref IRtcEngine::setLocalVoiceEqualization "setLocalVoiceEqualization"
+   *  - \ref IRtcEngine::setLocalVoiceReverb "setLocalVoiceReverb"
+   *
+   * @param preset The options for SDK preset voice conversion effects: #VOICE_CONVERSION_PRESET.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setVoiceConversionPreset(VOICE_CONVERSION_PRESET preset) = 0;
     /** Sets parameters for SDK preset audio effects.
      *
      * @since v3.2.0
@@ -6751,6 +8324,47 @@ public:
      * - < 0: Failure.
      */
     virtual int setAudioEffectParameters(AUDIO_EFFECT_PRESET preset, int param1, int param2) = 0;
+  /** Sets parameters for SDK preset voice beautifier effects.
+   *
+   * @since v3.3.0
+   *
+   * Call this method to set a gender characteristic and a reverberation effect for the singing beautifier effect. This method sets parameters for the local user who sends an audio stream.
+   *
+   * After you call this method successfully, all users in the channel can hear the relevant effect.
+   *
+   * To achieve better audio effect quality, before you call this method, AR recommends calling \ref IRtcEngine::setAudioProfile "setAudioProfile", and setting the `scenario` parameter
+   * as `AUDIO_SCENARIO_GAME_STREAMING(3)` and the `profile` parameter as `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`.
+   *
+   * @note
+   * - You can call this method either before or after joining a channel.
+   * - Do not set the `profile` parameter of \ref IRtcEngine::setAudioProfile "setAudioProfile" as `AUDIO_PROFILE_SPEECH_STANDARD(1)` or `AUDIO_PROFILE_IOT(6)`; otherwise, this method call does not take effect.
+   * - This method works best with the human voice. AR does not recommend using this method for audio containing music.
+   * - After you call this method, AR recommends not calling the following methods, because they can override `setVoiceBeautifierParameters`:
+   *    - \ref IRtcEngine::setAudioEffectPreset "setAudioEffectPreset"
+   *    - \ref IRtcEngine::setAudioEffectParameters "setAudioEffectParameters"
+   *    - \ref IRtcEngine::setVoiceBeautifierPreset "setVoiceBeautifierPreset"
+   *    - \ref IRtcEngine::setLocalVoiceReverbPreset "setLocalVoiceReverbPreset"
+   *    - \ref IRtcEngine::setLocalVoiceChanger "setLocalVoiceChanger"
+   *    - \ref IRtcEngine::setLocalVoicePitch "setLocalVoicePitch"
+   *    - \ref IRtcEngine::setLocalVoiceEqualization "setLocalVoiceEqualization"
+   *    - \ref IRtcEngine::setLocalVoiceReverb "setLocalVoiceReverb"
+   *    - \ref IRtcEngine::setVoiceConversionPreset "setVoiceConversionPreset"
+   *
+   * @param preset The options for SDK preset voice beautifier effects:
+   * - `SINGING_BEAUTIFIER`: Singing beautifier effect.
+   * @param param1 The gender characteristics options for the singing voice:
+   * - `1`: A male-sounding voice.
+   * - `2`: A female-sounding voice.
+   * @param param2 The reverberation effects options:
+   * - `1`: The reverberation effect sounds like singing in a small room.
+   * - `2`: The reverberation effect sounds like singing in a large room.
+   * - `3`: The reverberation effect sounds like singing in a hall.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int setVoiceBeautifierParameters(VOICE_BEAUTIFIER_PRESET preset, int param1, int param2) = 0;
     /** Sets the log files that the SDK outputs.
      *
      * By default, the SDK outputs five log files, `arsdk.log`, `arsdk_1.log`, `arsdk_2.log`, `arsdk_3.log`, `arsdk_4.log`, each with a default size of 1024 KB.
@@ -6793,6 +8407,31 @@ public:
      - <0: Failure.
      */
     virtual int setLogFileSize(unsigned int fileSizeInKBytes) = 0;
+	/// @cond
+  /** Uploads all SDK log files.
+   *
+   * @since v3.3.0
+   *
+   * Uploads all SDK log files from the client to the AR server.
+   * After a successful method call, the SDK triggers the \ref agora::rtc::IRtcEngineEventHandler::onUploadLogResult "onUploadLogResult" callback
+   * to report whether the log files are successfully uploaded to the AR server.
+   *
+   *
+   * For easier debugging, AR recommends that you bind this method to the UI element of your App, so as to instruct the
+   * user to upload a log file when a quality issue occurs.
+   *
+   * @note Do not call this method more than once per minute, otherwise the SDK reports #ERR_TOO_OFTEN (12).
+   *
+   * @param[out] requestId The request ID. This request ID is the same as requestId in the \ref IRtcEngineEventHandler::onUploadLogResult "onUploadLogResult" callback,
+   * and you can use the request ID to match a specific upload with a callback.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   *   - -12(ERR_TOO_OFTEN): The call frequency exceeds the limit.
+   */
+  virtual int uploadLogFile(AU::AString& requestId) = 0;
+  /// @endcond
     /** 
      @deprecated This method is deprecated, use the \ref IRtcEngine::setLocalRenderMode(RENDER_MODE_TYPE renderMode, VIDEO_MIRROR_MODE_TYPE mirrorMode) "setLocalRenderMode"2 method instead.
      Sets the local video display mode.
@@ -6994,8 +8633,29 @@ public:
      - < 0: Failure.
      */
 	virtual int adjustPlaybackSignalVolume(int volume) = 0;
-
-    /** 
+  /**
+   * Adjusts the volume of the signal captured by the sound card.
+   *
+   * @since v3.4.0
+   *
+   * After calling enableLoopbackRecording to enable loopback audio capturing,
+   * you can call this method to adjust the volume of the signal captured by
+   * the sound card.
+   *
+   * @note This method applies to Windows and macOS only.
+   *
+   * @param volume The volume of the signal captured by the sound card.
+   * The value ranges between 0 and 400, including the following:
+   * - 0: Mute.
+   * - 100: (Default) Original volume.
+   * - 400: Four times the original volume with signal-clipping protection.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int adjustLoopbackRecordingSignalVolume(int volume) = 0;
+  /**
      @deprecated This method is deprecated. As of v3.0.0, the Native SDK automatically enables interoperability with the Web SDK, so you no longer need to call this method.
      Enables interoperability with the AR Web SDK.
 
@@ -7459,7 +9119,7 @@ public:
     virtual int updateScreenCaptureRegion(const Rect *rect) = 0;
 #endif
 
-#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && TARGET_OS_IOS)
+#if defined(_WIN32)||defined(__ANDROID__) || (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_MAC))
     /** Sets a custom video source.
      *
      * During real-time communication, the AR SDK enables the default video input device, that is, the built-in camera to
@@ -7684,6 +9344,23 @@ public:
      - < 0: Failure.
      */
     virtual int createDataStream(int* streamId, bool reliable, bool ordered) = 0;
+  /** Creates a data stream.
+   *
+   * @since v3.3.0
+   *
+   * Each user can create up to five data streams in a single channel.
+   *
+   * This method does not support data reliability. If the receiver receives a data packet five
+   * seconds or more after it was sent, the SDK directly discards the data.
+   *
+   * @param[out] streamId The ID of the created data stream.
+   * @param config The configurations for the data stream: DataStreamConfig.
+   *
+   * @return
+   * - 0: Creates the data stream successfully.
+   * - < 0: Fails to create the data stream.
+   */
+  virtual int createDataStream(int* streamId, DataStreamConfig& config) = 0;
 
     /** Sends data stream messages to all users in a channel.
 
@@ -7836,8 +9513,60 @@ public:
     @param options Sets the image enhancement option. See BeautyOptions.
     */
     virtual int setBeautyEffectOptions(bool enabled, BeautyOptions options) = 0;
+  /**
+   * Enables/Disables the virtual background. (beta feature)
+   *
+   * Support for macOS and Windows as of v3.4.5 and Android and iOS as of v3.5.0.
+   *
+   * After enabling the virtual background feature, you can replace the original background image of the local user
+   * with a custom background image. After the replacement, all users in the channel can see the custom background
+   * image. You can find out from the
+   * \ref IRtcEngineEventHandler::onVirtualBackgroundSourceEnabled "onVirtualBackgroundSourceEnabled" callback
+   * whether the virtual background is successfully enabled or the cause of any errors.
+   *
+   * @note
+   * - Before calling this method, ensure that you have integrated the following dynamic library into your project:
+   *  - Android: `libagora_segmentation_extension.so`
+   *  - iOS: `AgoraVideoSegmentationExtension.xcframework`
+   *  - macOS: `AgoraVideoSegmentationExtension.framework`
+   *  - Windows: `libagora_segmentation_extension.dll`
+   * - Call this method after \ref IRtcEngine::enableVideo "enableVideo".
+   * - This functions requires a high-performance device. AR recommends that you use this function on the
+   * following devices:
+   *  - Android: Devices with the following chips:
+   *    - Snapdragon 700 series 750G and later
+   *    - Snapdragon 800 series 835 and later
+   *    - Dimensity 700 series 720 and later
+   *    - Kirin 800 series 810 and later
+   *    - Kirin 900 series 980 and later
+   *  - iOS: Devices with an A9 chip and better, as follows:
+   *    - iPhone 6S and later
+   *    - iPad Air (3rd generation) and later
+   *    - iPad (5th generation) and later
+   *    - iPad Pro (1st generation) and later
+   *    - iPad mini (5th generation) and later
+   *  - macOS and Windows: Devices with an i5 CPU and better
+   * - AR recommends that you use this function in scenarios that meet the following conditions:
+   *  - A high-definition camera device is used, and the environment is uniformly lit.
+   *  - The captured video image is uncluttered, the user's portrait is half-length and largely unobstructed, and the
+   * background is a single color that differs from the color of the user's clothing.
+   * - The virtual background feature does not support video in the Texture format or video obtained from custom video capture by the Push method.
+   *
+   * @param enabled Sets whether to enable the virtual background:
+   * - true: Enable.
+   * - false: Disable.
+   * @param backgroundSource The custom background image. See VirtualBackgroundSource.
+   * Note: To adapt the resolution of the custom background image to the resolution of the SDK capturing video,
+   * the SDK scales and crops
+   * the custom background image while ensuring that the content of the custom background image is not distorted.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int enableVirtualBackground(bool enabled, VirtualBackgroundSource backgroundSource) = 0;
 
-    /** Adds a voice or video stream URL address to a live broadcast.
+  /** Adds a voice or video stream URL address to the live streaming.
 
     The \ref IRtcEngineEventHandler::onStreamPublished "onStreamPublished" callback returns the inject status. If this method call is successful, the server pulls the voice or video stream and injects it into a live channel. This is applicable to scenarios where all audience members in the channel can watch a live show and interact with each other.
 
@@ -8071,6 +9800,36 @@ public:
      - < 0: Failure.
      */
     virtual int setParameters(const char* parameters) = 0;
+  /**
+   * Takes a snapshot of a video stream.
+   *
+   * @since v3.5.2
+   *
+   * This method takes a snapshot of a video stream from the specified user, generates a JPG image,
+   * and saves it to the specified path.
+   *
+   * The method is asynchronous, and the SDK has not taken the snapshot when the method call returns.
+   * After a successful method call, the SDK triggers the \ref IRtcEngineEventHandler::onSnapshotTaken "onSnapshotTaken"
+   * callback to report whether the snapshot is successfully taken as well as the details of the snapshot taken.
+   *
+   * @note
+   * - Call this method after joining a channel.
+   * - If the video of the specified user is pre-processed, for example, added with watermarks or image enhancement
+   * effects, the generated snapshot also includes the pre-processing effects.
+   *
+   * @param channel The channel name.
+   * @param uid The user ID of the user. Set `uid` as 0 if you want to take a snapshot of the local user's video.
+   * @param filePath The local path (including the filename extensions) of the snapshot. For example,
+   * `C:\Users\<user_name>\AppData\Local\Agora\<process_name>\example.jpg` on Windows,
+   * `/App Sandbox/Library/Caches/example.jpg` on iOS, `～/Library/Logs/example.jpg` on macOS, and
+   * `/storage/emulated/0/Android/data/<package name>/files/example.jpg` on Android. Ensure that the path you specify
+   * exists and is writable.
+   *
+   * @return
+   * - 0: Success.
+   * - < 0: Failure.
+   */
+  virtual int takeSnapshot(const char* channel, uid_t uid, const char* filePath) = 0;
 };
 
 

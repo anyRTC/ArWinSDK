@@ -22,6 +22,11 @@ public:
 	virtual void Stop();
 
 	static CString LoadAppID();
+	static CString LoadSvrIp();
+	static int LoadSvrPort();
+	static int LoadVidWidth();
+	static int LoadVidHeight();
+	static int LoadVidFps();
 	
 	IRtcEngine *GetEngine() { return m_lpArEngine; }
 
@@ -69,6 +74,10 @@ private:
 	bool					m_bLocalAudioMuted;
 	bool					m_bLocalVideoMuted;
 	bool					m_bScreenCapture;
+
+	int						m_nVideoWidth;
+	int						m_nVideoHeight;
+	int						m_nVideoFps;
 public:
 	bool EnableVideo(bool bEnable = true);
 	bool IsVideoEnabled();

@@ -10,29 +10,6 @@
 
 namespace ar {
 namespace rtc {
-/** The channel media options. */
-struct ChannelMediaOptions {
-    /** Determines whether to subscribe to audio streams when the user joins the channel:
-     - true: (Default) Subscribe.
-     - false: Do not subscribe.
-
-     This member serves a similar function to the \ref ar::rtc::IChannel::muteAllRemoteAudioStreams "muteAllRemoteAudioStreams" method. After joining the channel, 
-     you can call the `muteAllRemoteAudioStreams` method to set whether to subscribe to audio streams in the channel.
-     */
-    bool autoSubscribeAudio;
-    /** Determines whether to subscribe to video streams when the user joins the channel:
-     - true: (Default) Subscribe.
-     - false: Do not subscribe.
-
-     This member serves a similar function to the \ref ar::rtc::IChannel::muteAllRemoteVideoStreams "muteAllRemoteVideoStreams" method. After joining the channel, 
-     you can call the `muteAllRemoteVideoStreams` method to set whether to subscribe to video streams in the channel.
-     */
-    bool autoSubscribeVideo;
-    ChannelMediaOptions()
-    : autoSubscribeAudio(true)
-    , autoSubscribeVideo(true)
-    {}
-};
 /** The IChannel class. */
 class IChannel;
 /** The IChannelEventHandler class. */
@@ -489,11 +466,11 @@ public:
      @param state The RTMP streaming state. See: #RTMP_STREAM_PUBLISH_STATE.
      @param errCode The detailed error information for streaming. See: #RTMP_STREAM_PUBLISH_ERROR.
      */
-    virtual void onRtmpStreamingStateChanged(IChannel *rtcChannel, const char *url, RTMP_STREAM_PUBLISH_STATE state, RTMP_STREAM_PUBLISH_ERROR errCode) {
+    virtual void onRtmpStreamingStateChanged(IChannel *rtcChannel, const char *url, RTMP_STREAM_PUBLISH_STATE state, RTMP_STREAM_PUBLISH_ERROR_TYPE errCode) {
         (void)rtcChannel;
         (void) url;
         (RTMP_STREAM_PUBLISH_STATE) state;
-        (RTMP_STREAM_PUBLISH_ERROR) errCode;
+        (RTMP_STREAM_PUBLISH_ERROR_TYPE) errCode;
     }
 	virtual void onStreamPublished(IChannel *rtcChannel, const char *url, int error) {
 		(void)rtcChannel;

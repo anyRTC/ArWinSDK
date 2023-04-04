@@ -18,10 +18,63 @@ enum MEDIA_SOURCE_TYPE {
 };
 
 /**
+ * The channel mode. Set in \ref agora::rtc::IRtcEngine::setAudioMixingDualMonoMode "setAudioMixingDualMonoMode".
+ *
+ * @since v3.5.1
+ */
+enum AUDIO_MIXING_DUAL_MONO_MODE {
+  /**
+   * 0: Original mode.
+   */
+  AUDIO_MIXING_DUAL_MONO_AUTO = 0,
+  /**
+   * 1: Left channel mode. This mode replaces the audio of the right channel
+   * with the audio of the left channel, which means the user can only hear
+   * the audio of the left channel.
+   */
+  AUDIO_MIXING_DUAL_MONO_L = 1,
+  /**
+   * 2: Right channel mode. This mode replaces the audio of the left channel with
+   * the audio of the right channel, which means the user can only hear the audio
+   * of the right channel.
+   */
+  AUDIO_MIXING_DUAL_MONO_R = 2,
+  /**
+   * 3: Mixed channel mode. This mode mixes the audio of the left channel and
+   * the right channel, which means the user can hear the audio of the left
+   * channel and the right channel at the same time.
+   */
+  AUDIO_MIXING_DUAL_MONO_MIX = 3
+};
+/**
+ * The push position of the external audio frame.
+ * Set in \ref IMediaEngine::pushAudioFrame(int32_t, IAudioFrameObserver::AudioFrame*) "pushAudioFrame"
+ * or \ref IMediaEngine::setExternalAudioSourceVolume "setExternalAudioSourceVolume".
+ *
+ * @since v3.5.1
+ */
+enum AUDIO_EXTERNAL_SOURCE_POSITION {
+  /** 0: The position before local playback. If you need to play the external audio frame on the local client,
+   * set this position.
+   */
+  AUDIO_EXTERNAL_PLAYOUT_SOURCE = 0,
+  /** 1: The position after audio capture and before audio pre-processing. If you need the audio module of the SDK
+   * to process the external audio frame, set this position.
+   */
+  AUDIO_EXTERNAL_RECORD_SOURCE_PRE_PROCESS = 1,
+  /** 2: The position after audio pre-processing and before audio encoding. If you do not need the audio module of
+   * the SDK to process the external audio frame, set this position.
+   */
+  AUDIO_EXTERNAL_RECORD_SOURCE_POST_PROCESS = 2,
+};
+
+/**
  * The IAudioFrameObserver class.
  */
 class IAudioFrameObserver {
  public:
+  IAudioFrameObserver() {}
+  virtual ~IAudioFrameObserver() {}
   /** The frame type. */
   enum AUDIO_FRAME_TYPE {
     /** 0: PCM16. */
@@ -100,8 +153,7 @@ class IAudioFrameObserver {
   - true: Valid buffer in AudioFrame, and the mixed recorded and playback audio frame is sent out.
   - false: Invalid buffer in AudioFrame, and the mixed recorded and playback audio frame is discarded.
   */
-  virtual bool onPlaybackAudioFrameBeforeMixing(const char* uid,
-      AudioFrame& audioFrame) = 0;
+  virtual bool onPlaybackAudioFrameBeforeMixing(const char* uid, AudioFrame& audioFrame) = 0;
   /** Determines whether to receive audio data from multiple channels.
 
    @since v3.0.1
@@ -138,8 +190,7 @@ class IAudioFrameObserver {
   - `true`: The data in AudioFrame is valid, and send this audio frame.
   - `false`: The data in AudioFrame in invalid, and do not send this audio frame.
   */
-  virtual bool onPlaybackAudioFrameBeforeMixingEx(const char *channelId,
-      const char* uid, AudioFrame& audioFrame) { return true; }
+  virtual bool onPlaybackAudioFrameBeforeMixingEx(const char *channelId, const char* uid, AudioFrame& audioFrame) { return true; }
 
 };
 
@@ -394,12 +445,7 @@ class IVideoFrameObserver {
 
 class IVideoFrame {
  public:
-  enum PLANE_TYPE {
-    Y_PLANE = 0,
-    U_PLANE = 1,
-    V_PLANE = 2,
-    NUM_OF_PLANES = 3
-  };
+  enum PLANE_TYPE { Y_PLANE = 0, U_PLANE = 1, V_PLANE = 2, NUM_OF_PLANES = 3 };
   enum VIDEO_TYPE {
     VIDEO_TYPE_UNKNOWN = 0,
     VIDEO_TYPE_I420 = 1,
@@ -522,14 +568,12 @@ class IExternalVideoRender {
  public:
   virtual void release() = 0;
   virtual int initialize() = 0;
-  virtual int deliverFrame(const IVideoFrame& videoFrame, int rotation,
-                           bool mirrored) = 0;
+  virtual int deliverFrame(const IVideoFrame& videoFrame, int rotation, bool mirrored) = 0;
 };
 
 class IExternalVideoRenderFactory {
  public:
-  virtual IExternalVideoRender* createRenderInstance(
-      const ExternalVideoRenerContext& context) = 0;
+  virtual IExternalVideoRender* createRenderInstance(const ExternalVideoRenerContext& context) = 0;
 };
 
 /** The external video frame.
