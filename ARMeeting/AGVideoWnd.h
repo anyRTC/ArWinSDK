@@ -81,6 +81,7 @@ private:
 	COLORREF		m_crBackColor;
 
 	CAGInfoWnd		m_wndInfo;
+	CWnd*			m_pParentWnd;
 
 private:
 	std::string		m_nUID;

@@ -110,6 +110,7 @@ CAGVideoWnd::CAGVideoWnd()
 , m_bBackground(FALSE)
 , m_nWidth(640)
 , m_nHeight(360)
+, m_pParentWnd(NULL)
 {
 
 }
@@ -302,7 +303,17 @@ void CAGVideoWnd::OnSize(UINT nType, int cx, int cy)
 
 void CAGVideoWnd::OnLButtonDblClk(UINT nFlags, CPoint point)
 {	// TODO:  在此添加消息处理程序代码和/或调用默认值
-	//::SendMessage(GetParent()->GetSafeHwnd(), WM_SHOWMODECHANGED, (WPARAM)this, (LPARAM)m_nUID.GetString());
+	//::SendMessage(GetParent()->GetSafeHwnd(), WM_SHOWMODECHANGED, (WPARAM)this, (LPARAM)m_nUID.c_str());
+	if (NULL == m_pParentWnd) {
+		m_pParentWnd = GetParent();
+		SetParent(CWnd::FromHandle(::GetDesktopWindow()));
+		ShowWindow(SW_MAXIMIZE);
+	}
+	else {
+		ShowWindow(SW_SHOWNORMAL);
+		SetParent(m_pParentWnd);
+		m_pParentWnd = NULL;
+	}
 
 	CWnd::OnLButtonDblClk(nFlags, point);
 }
